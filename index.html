@@ -271,6 +271,23 @@
       font-size: 13px;
     }
 
+    #views {
+      position: absolute;
+      z-index: 40;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      color: var(--green);
+      background: rgba(0, 10, 5, .6);
+      border: 1px solid rgba(65,255,122,.4);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(65,255,122,.6);
+      pointer-events: none;
+      user-select: none;
+    }
+
     .progress {
       position: absolute;
       z-index: 29;
@@ -409,6 +426,7 @@
   </div>
   <div class="progress" aria-hidden="true"><span id="bar"></span></div>
   <div id="glitch" class="glitch" aria-hidden="true"></div>
+  <div id="views" aria-label="View count" hidden>◉ <span id="views-n">—</span></div>
 
   <script>
     const beats = [
@@ -929,6 +947,21 @@
 
     show(0, false);
     requestAnimationFrame(tick);
+
+    // View counter — increments once per load via a free counter service.
+    // Fails silently (stays hidden) if the service is unreachable.
+    (function () {
+      const box = document.getElementById("views");
+      const n = document.getElementById("views-n");
+      fetch("https://abacus.jasoncameron.dev/hit/kingpiragua-osiris/views")
+        .then((r) => r.ok ? r.json() : Promise.reject())
+        .then((d) => {
+          if (typeof d.value !== "number") return;
+          n.textContent = d.value.toLocaleString();
+          box.hidden = false;
+        })
+        .catch(() => { /* counter offline — leave hidden */ });
+    })();
   </script>
 </body>
 </html>
