@@ -591,16 +591,16 @@
       { src: "assets/48-artist-desk.png", ratio: 1295 / 1214, contain: true, duration: 6500, mode: "green" },
       { src: "assets/49-split-archive-cover.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
       { src: "assets/50-young-lords.png", ratio: 1025 / 1535, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/51-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/52-extra.png", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/53-extra.png", ratio: 1183 / 1329, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/54-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/55-extra.png", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/56-extra.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/57-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/58-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/59-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/62-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/51-library-unwritten.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/52-system-schematic.png", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/53-four-pages-throne.png", ratio: 1183 / 1329, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/54-split-archive-young-lords.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/55-prologue-p7.png", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/56-intro-terminal.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/57-classroom-1989.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/58-throne-signal-detected.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/59-duat-protocol.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/62-guanica-1898.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" },
       { src: "assets/63-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/64-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/65-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
@@ -699,12 +699,15 @@
     // Sequence of the comic. Rearrange these lines to re-cut the story;
     // every src in `beats` above must appear here exactly once.
     const ORDER = [
+      "assets/56-intro-terminal.png",
       "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
       "assets/27-prologue-cover.png",          // OSIRIS.EXE prologue cover
       "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
       "assets/43-lincoln-park-arrival.png",
       "assets/03-school.png",                  // the boy, 1987
+      "assets/57-classroom-1989.png",
       "assets/05-questions.png",               // "don't say anything crazy"
+      "assets/55-prologue-p7.png",
       "assets/04-cage.png",                    // some inherit silence
       "assets/23-signal-in-walls.webp",        // the signal was already inside the walls
       "assets/44-dead-phone-glow.png",
@@ -722,6 +725,7 @@
       "assets/41-resist-exist-reclaim.png",
       "assets/21-ser-boricua.webp",            // ser boricua es un honor
       "assets/50-young-lords.png",
+      "assets/54-split-archive-young-lords.png",
       "assets/18-diskdarian-blackbook.webp",   // the youth are searching
       "assets/42-diskdarian-memory.png",
       "assets/06-enmascarado.png",             // we learned to unthread the grid
@@ -730,15 +734,21 @@
       "assets/26-vejigante-permiso.webp",      // el vejigante no pide permiso
       "assets/34-osiris-godform.jpg",          // osiris godform (crook & flail)
       "assets/39-osiris-spec.png",
+      "assets/52-system-schematic.png",
       "assets/16-duat-vessel.png",             // keeper of the Duat / you were a vessel
+      "assets/53-four-pages-throne.png",
+      "assets/58-throne-signal-detected.png",
       "assets/36-duat-godform.jpg",            // cybernetic winged Duat god
       "assets/37-duat-cybergod.jpg",           // duat cyber-deity
+      "assets/59-duat-protocol.png",
       "assets/14-desierto.png",                // el desierto no perdona
       "assets/40-shattered-reflection.png",
+      "assets/51-library-unwritten.png",
       "assets/10-mask-signal.png",             // the mask is the signal
       "assets/38-skull-confrontation.jpg",     // skull-mask confrontation (climax lead-in)
       "assets/08-merge.png",                   // identity merge (climax)
       "assets/20-second-signal.webp",          // you thought it started with Frank (twist)
+      "assets/62-guanica-1898.png",
       "assets/49-split-archive-cover.png",
       "assets/15-body-changes.png",            // the body changes, the signal remains
       "assets/09-archive-rises.png",           // we are the archive
@@ -746,16 +756,6 @@
       "assets/47-corrupted-file-cover.png",
       "assets/29-elenita-sheet.png",           // bonus: Elenita de Jesus model sheet
       "assets/22-jdm-triptych.webp",            // bonus plate
-      "assets/51-extra.png",
-      "assets/52-extra.png",
-      "assets/53-extra.png",
-      "assets/54-extra.png",
-      "assets/55-extra.png",
-      "assets/56-extra.png",
-      "assets/57-extra.png",
-      "assets/58-extra.png",
-      "assets/59-extra.png",
-      "assets/62-extra.png",
       "assets/63-extra.png",
       "assets/64-extra.png",
       "assets/65-extra.png",
