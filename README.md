@@ -105,4 +105,11 @@ git add -A && git commit -m "your change" && git push
 Art, story, and concept by **Disk Darián** (kingpiragua).
 Built as a dependency-free, single-file web experience.
 
+## License
+
+© 2026 Disk Darián. **All Rights Reserved.** The artwork, characters, story, and
+panels are proprietary. You may view the work and run it locally for personal
+evaluation, but copying, redistribution, derivatives, and commercial use require
+written permission. See [`LICENSE`](LICENSE) for full terms.
+
 *"The archive never died. It remembered."*

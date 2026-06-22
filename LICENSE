@@ -1,0 +1,41 @@
+OSIRIS.EXE // Pale Horse Protocol
+Copyright (c) 2026 Disk Darián (github.com/kingpiragua). All Rights Reserved.
+
+This repository and everything in it — including but not limited to the artwork,
+panel images, characters, names, story, dialogue, text, designs, and the
+arrangement and sequencing of the motion comic — is the original, proprietary
+work of the copyright holder and is protected by copyright and other
+intellectual-property laws.
+
+PERMITTED
+- You may view this repository.
+- You may view the published work at its official URL.
+- You may clone or download the repository and run it locally for the sole
+  purpose of personal, non-commercial evaluation.
+
+NOT PERMITTED without the prior written permission of the copyright holder
+- Copying, reproducing, or redistributing the artwork, story, characters, or any
+  panel, in whole or in part, by any means.
+- Creating derivative works, adaptations, remixes, edits, or translations.
+- Public display, performance, broadcast, or publication of the work or any part
+  of it, outside of the official URL.
+- Any commercial use, including sale, licensing, merchandising, NFTs/minting, or
+  use in advertising or training of machine-learning models.
+- Removing, altering, or obscuring any copyright, credit, or attribution.
+
+NOTE ON CODE vs. CONTENT
+The small amount of generic HTML/CSS/JavaScript scaffolding in `index.html`
+(the playback engine) may be studied for educational reference. This permission
+does NOT extend to the artwork, images, characters, story, or text, which remain
+fully reserved.
+
+NO WARRANTY
+The work is provided "as is", without warranty of any kind, express or implied.
+In no event shall the copyright holder be liable for any claim, damages, or other
+liability arising from the work or its use.
+
+PERMISSIONS & LICENSING
+To request permission for any use not granted above, contact the copyright holder
+through the repository on GitHub (github.com/kingpiragua).
+
+All rights not expressly granted are reserved.
