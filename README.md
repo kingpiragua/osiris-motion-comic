@@ -1,3 +1,5 @@
+[![OSIRIS.EXE — Pale Horse Protocol](banner.png)](https://kingpiragua.github.io/osiris-motion-comic/)
+
 # OSIRIS.EXE // Pale Horse Protocol
 
 A single-file, self-running **motion comic** with a retro green-phosphor terminal
