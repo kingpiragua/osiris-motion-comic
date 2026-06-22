@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OSIRIS.EXE // Pale Horse Motion Comic</title>
+  <style>
+    :root {
+      --green: #41ff7a;
+      --green-dim: #1f9f55;
+      --amber: #d99b45;
+      --paper: #d7b574;
+      --red: #ff3b30;
+      --black: #020403;
+      --panel: #070b09;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      color: var(--green);
+      font-family: "Courier New", ui-monospace, monospace;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: rgba(2, 8, 5, .82);
+      border: 1px solid rgba(65, 255, 122, .55);
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      border-color: var(--amber);
+      color: var(--amber);
+      outline: none;
+    }
+
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(32, 128, 72, .18), transparent 32%),
+        linear-gradient(180deg, #030503, #000 52%, #050000);
+      isolation: isolate;
+      animation: powerOn 1s ease-in-out forwards;
+    }
+
+    #app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      background:
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.06) 0, rgba(255,255,255,.06) 1px, transparent 1px, transparent 4px),
+        radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,.82) 100%);
+      mix-blend-mode: overlay;
+      opacity: .75;
+    }
+
+    #app::after {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      z-index: 21;
+      pointer-events: none;
+      opacity: .13;
+      background-image:
+        linear-gradient(115deg, transparent 0 47%, rgba(65,255,122,.14) 48% 50%, transparent 51% 100%),
+        repeating-radial-gradient(circle at 35% 45%, rgba(255,255,255,.25) 0 1px, transparent 1px 5px);
+      animation: noise 1.7s steps(2) infinite;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.02);
+      transition: opacity .5s ease, transform .5s ease;
+      z-index: 1;
+    }
+
+    .scene.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+      z-index: 2;
+    }
+
+    .frame {
+      position: relative;
+      width: min(92vw, calc(92vh * var(--ratio)));
+      height: min(92vh, calc(92vw / var(--ratio)));
+      background: var(--panel);
+      overflow: hidden;
+      border: 1px solid rgba(217,155,69,.42);
+      box-shadow:
+        0 0 0 2px rgba(0,0,0,.9),
+        0 0 34px rgba(65,255,122,.18),
+        0 20px 80px rgba(0,0,0,.9);
+    }
+
+    .scene.red .frame {
+      border-color: rgba(255,59,48,.58);
+      box-shadow:
+        0 0 0 2px rgba(0,0,0,.95),
+        0 0 36px rgba(255,59,48,.28),
+        0 20px 80px rgba(0,0,0,.92);
+    }
+
+    .art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: contrast(1.07) saturate(.95) brightness(.9);
+      transform: scale(var(--start-scale, 1.08)) translate3d(var(--start-x, 0), var(--start-y, 0), 0);
+      transform-origin: var(--origin, center center);
+      animation: drift var(--duration, 8s) ease-in-out infinite alternate;
+      animation-play-state: paused;
+    }
+
+    /* Only the visible panel animates — keeps 160+ images cheap. */
+    .scene.active .art {
+      animation-play-state: running;
+    }
+
+    .fit-contain .art {
+      object-fit: contain;
+      background: #030303;
+    }
+
+    .light {
+      position: absolute;
+      width: 28%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      left: var(--x, 50%);
+      top: var(--y, 50%);
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(77,255,129,.52), rgba(77,255,129,.16) 26%, transparent 70%);
+      mix-blend-mode: screen;
+      opacity: .72;
+      animation: pulse 2.3s ease-in-out infinite;
+    }
+
+    .scene.red .light {
+      background: radial-gradient(circle, rgba(255,59,48,.58), rgba(255,128,42,.18) 28%, transparent 72%);
+    }
+
+    .hud {
+      position: absolute;
+      left: clamp(12px, 2vw, 24px);
+      top: clamp(12px, 2vw, 24px);
+      max-width: min(430px, 56%);
+      padding: 10px 12px;
+      color: var(--green);
+      background: rgba(0, 10, 5, .66);
+      border: 1px solid rgba(65,255,122,.45);
+      text-transform: uppercase;
+      letter-spacing: 0;
+      font-size: clamp(11px, 1.55vw, 18px);
+      line-height: 1.3;
+      text-shadow: 0 0 12px rgba(65,255,122,.6);
+    }
+
+    .scene.red .hud {
+      color: var(--red);
+      border-color: rgba(255,59,48,.55);
+      text-shadow: 0 0 14px rgba(255,59,48,.68);
+    }
+
+    .caption {
+      position: absolute;
+      left: clamp(14px, 3vw, 44px);
+      right: clamp(14px, 3vw, 44px);
+      bottom: clamp(72px, 11vh, 118px);
+      display: grid;
+      gap: 8px;
+      max-width: 780px;
+      padding: clamp(12px, 2vw, 20px);
+      background: rgba(3, 9, 5, .82);
+      border: 1px solid rgba(65,255,122,.48);
+      box-shadow: 0 0 24px rgba(0,0,0,.7);
+    }
+
+    .scene.red .caption {
+      border-color: rgba(255,59,48,.62);
+      background: rgba(16, 3, 3, .84);
+    }
+
+    .caption strong {
+      color: var(--amber);
+      font-size: clamp(13px, 1.6vw, 20px);
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .caption span {
+      color: #c9ffd5;
+      font-size: clamp(12px, 1.6vw, 18px);
+      line-height: 1.4;
+    }
+
+    .caption em {
+      color: var(--paper);
+      font-style: normal;
+    }
+
+    .terminal {
+      position: absolute;
+      right: clamp(12px, 2vw, 24px);
+      top: clamp(12px, 2vw, 24px);
+      width: min(330px, 36%);
+      padding: 10px 12px;
+      color: var(--red);
+      background: rgba(15, 0, 0, .76);
+      border: 1px solid rgba(255,59,48,.56);
+      font-size: clamp(10px, 1.25vw, 16px);
+      line-height: 1.35;
+      text-transform: uppercase;
+      text-shadow: 0 0 13px rgba(255,59,48,.72);
+    }
+
+    .terminal.green {
+      color: var(--green);
+      background: rgba(0, 12, 6, .72);
+      border-color: rgba(65,255,122,.45);
+      text-shadow: 0 0 13px rgba(65,255,122,.65);
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,.72);
+      border: 1px solid rgba(65,255,122,.28);
+    }
+
+    .controls button {
+      width: 42px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .counter {
+      min-width: 86px;
+      text-align: center;
+      color: var(--paper);
+      font-size: 13px;
+    }
+
+    .progress {
+      position: absolute;
+      z-index: 29;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 100%;
+      background: rgba(255,255,255,.08);
+    }
+
+    .progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+    }
+
+    .glitch {
+      position: absolute;
+      inset: 0;
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0;
+      mix-blend-mode: screen;
+      background:
+        linear-gradient(90deg, transparent 0 12%, rgba(255,59,48,.35) 12% 13%, transparent 13% 54%, rgba(65,255,122,.28) 54% 55%, transparent 55%),
+        repeating-linear-gradient(to bottom, transparent 0 18px, rgba(255,255,255,.08) 18px 20px);
+    }
+
+    .glitch.hit {
+      animation: glitch .42s steps(2);
+    }
+
+    .title-card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 7vw;
+      text-align: center;
+      background: radial-gradient(circle, rgba(65,255,122,.16), transparent 38%), #000;
+    }
+
+    .title-card h1 {
+      margin: 0;
+      color: #e7ffe9;
+      font-size: clamp(36px, 8vw, 118px);
+      line-height: .88;
+      text-shadow: 0 0 28px rgba(65,255,122,.45);
+    }
+
+    .title-card p {
+      max-width: 800px;
+      margin: 22px auto 0;
+      color: var(--paper);
+      font-size: clamp(14px, 2vw, 24px);
+      line-height: 1.35;
+    }
+
+    @media (max-width: 760px) {
+      .frame {
+        width: 100vw;
+        height: 100vh;
+        border: 0;
+      }
+
+      .hud,
+      .terminal {
+        max-width: calc(100vw - 24px);
+        width: auto;
+        font-size: 11px;
+      }
+
+      .terminal {
+        left: 12px;
+        right: auto;
+        top: auto;
+        bottom: 134px;
+      }
+
+      .caption {
+        left: 12px;
+        right: 12px;
+        bottom: 70px;
+        padding: 12px;
+      }
+    }
+
+    @keyframes drift {
+      from { transform: scale(var(--start-scale, 1.08)) translate3d(var(--start-x, 0), var(--start-y, 0), 0); }
+      to { transform: scale(var(--end-scale, 1.18)) translate3d(var(--end-x, 0), var(--end-y, 0), 0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .45; transform: translate(-50%, -50%) scale(.9); }
+      50% { opacity: .92; transform: translate(-50%, -50%) scale(1.18); }
+    }
+
+    @keyframes glitch {
+      0% { opacity: 0; transform: translateX(0); }
+      18% { opacity: .9; transform: translateX(-10px); }
+      36% { opacity: .35; transform: translateX(8px); }
+      60% { opacity: .8; transform: translateX(-4px); }
+      100% { opacity: 0; transform: translateX(0); }
+    }
+
+    @keyframes noise {
+      0% { transform: translate3d(-2%, -1%, 0); }
+      100% { transform: translate3d(2%, 1%, 0); }
+    }
+
+    @keyframes powerOn {
+      0% { opacity: 0; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="OSIRIS.EXE Pale Horse Protocol motion comic">
+    <section class="scene active" data-duration="5200">
+      <div class="title-card">
+        <div>
+          <h1>OSIRIS.EXE</h1>
+          <p>PALE HORSE PROTOCOL // A motion comic proof assembled from the Underlayer archive.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="controls" aria-label="Playback controls">
+    <button id="prev" type="button" aria-label="Previous panel">‹</button>
+    <button id="play" type="button" aria-label="Pause">Ⅱ</button>
+    <div id="counter" class="counter">01 / 11</div>
+    <button id="next" type="button" aria-label="Next panel">›</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+  <div id="glitch" class="glitch" aria-hidden="true"></div>
+
+  <script>
+    const beats = [
+      {
+        src: "assets/01-prologue.png",
+        ratio: 1009 / 1558,
+        contain: true,
+        duration: 7200,
+        hud: "BOOK 6 // PALE HORSE RISING\\nISSUE 6.0 // PROLOGUE",
+        title: "The Card Game Was The Manual",
+        text: "The archive opens in ordinary light first. Humboldt Park. A child. A warning hiding in plain sight.",
+        terminal: "WELCOME TO THE PALE HORSE PROTOCOL.",
+        mode: "green",
+        light: ["50%", "52%"],
+        motion: ["1.02", "0", "0", "1.09", "0", "-2%"]
+      },
+      {
+        src: "assets/03-school.png",
+        ratio: 1536 / 1024,
+        duration: 7000,
+        hud: "HUMBOLDT PARK // ST. SYLVESTER\\nYEAR: 1987",
+        title: "The Week Is Not Real",
+        text: "Before OSIRIS was a system, he was a boy learning that time can be a cage.",
+        terminal: "SIGNAL TRACE: CHILDHOOD NODE",
+        mode: "green",
+        light: ["50%", "30%"],
+        motion: ["1.08", "0", "0", "1.18", "0", "-1.5%"]
+      },
+      {
+        src: "assets/04-cage.png",
+        ratio: 1536 / 1024,
+        duration: 6800,
+        hud: "CITY MEMORY // DIVISION STREET",
+        title: "Some Inherit Silence",
+        text: "The city does not wait. Nobody does. Not even the sun.",
+        terminal: "STATUS: WATCHED\\nAWARENESS LEVEL: 0.03%",
+        mode: "green",
+        light: ["56%", "50%"],
+        motion: ["1.05", "-1%", "0", "1.16", "1%", "0"]
+      },
+      {
+        src: "assets/05-questions.png",
+        ratio: 1,
+        duration: 6800,
+        hud: "FAMILY NODE // PRE-SIGNAL",
+        title: "Questions",
+        text: "Some children inherit money. Some inherit silence. OSIRIS inherited questions.",
+        terminal: "QUERY: WHAT IF THE CRAZY THING IS THE TRUTH?",
+        mode: "green",
+        light: ["72%", "42%"],
+        motion: ["1.04", "0", "0", "1.13", "-1.5%", "1%"]
+      },
+      {
+        src: "assets/02-cooper-file.png",
+        ratio: 1024 / 1536,
+        contain: true,
+        duration: 7600,
+        hud: "PAGE 2 // THE COOPER FILE",
+        title: "Analog Haunting A Digital World",
+        text: "<em>Behold a Pale Horse</em> materializes in data-space. The book was not the message. The message was the architecture.",
+        terminal: "PASSAGE NODES: ACTIVE\\nNETWORK PULSE: RISING",
+        mode: "red",
+        light: ["58%", "25%"],
+        motion: ["1.02", "0", "1%", "1.1", "0", "-2%"]
+      },
+      {
+        src: "assets/07-judge-protocol.png",
+        ratio: 1024 / 1536,
+        contain: true,
+        duration: 7000,
+        hud: "NODE 05 // THE LAW",
+        title: "Justice Engine",
+        text: "The law does not seek truth. It seeks finality. Pale Horse calls it order.",
+        terminal: "PALE HORSE RESPONSE: ELEVATED\\nSTATUS: COMPROMISED",
+        mode: "red",
+        light: ["53%", "42%"],
+        motion: ["1.02", "0", "0", "1.12", "0", "1.5%"]
+      },
+      {
+        src: "assets/06-enmascarado.png",
+        ratio: 1023 / 1537,
+        contain: true,
+        duration: 7000,
+        hud: "REZ: EL ENMASCARADO\\nGRID: NORTH AVE VIADUCT",
+        title: "We Learned To Unthread It",
+        text: "They built the grid to watch us. The mask learned to turn surveillance into a route out.",
+        terminal: "GRILLA: CANCELADA\\nSENSOR EYE: CRACKED",
+        mode: "green",
+        light: ["50%", "48%"],
+        motion: ["1.03", "0", "0", "1.13", "0", "-1%"]
+      },
+      {
+        src: "assets/10-mask-signal.png",
+        ratio: 1024 / 1536,
+        contain: true,
+        duration: 6700,
+        hud: "CACO: LINKED // SIGNAL CONTAINED",
+        title: "The Mask Is The Signal",
+        text: "No busco el poder. Libero lo que ya es nuestro.",
+        terminal: "DISPATCH LEVEL: COMPROMISED\\nBLIND ZONE: ESTABLISHED",
+        mode: "green",
+        light: ["50%", "56%"],
+        motion: ["1.02", "0", "0", "1.12", "0", "1%"]
+      },
+      {
+        src: "assets/08-merge.png",
+        ratio: 1086 / 1448,
+        contain: true,
+        duration: 7600,
+        hud: "OSIRIS.EXE TERMINAL v1.7.3",
+        title: "Identity Merge",
+        text: "Cooper died for writing it down. Frank died for living it. Now the record refuses to burn.",
+        terminal: "SYSTEM OVERRIDE\\nSOUL ANCHOR DETECTED\\nERROR // ERROR // ERROR",
+        mode: "red",
+        light: ["50%", "48%"],
+        motion: ["1.02", "0", "0", "1.14", "0", "-1.5%"]
+      },
+      {
+        src: "assets/09-archive-rises.png",
+        ratio: 1023 / 1537,
+        contain: true,
+        duration: 7600,
+        hud: "THE SPLIT ARCHIVE // TRANSMISSION LIVE",
+        title: "We Are The Archive",
+        text: "Together we silence their power. We take back what was filed under forgetting.",
+        terminal: "ERASE: DENIED\\nCOMPLY: DENIED\\nOBEY: DENIED\\nDELETE: DENIED",
+        mode: "green",
+        light: ["48%", "36%"],
+        motion: ["1.02", "0", "0", "1.11", "0", "-1%"]
+      },
+      {
+        src: "assets/11-enmascarado-unit.png",
+        ratio: 1122 / 1402,
+        contain: true,
+        duration: 7000,
+        mode: "green"
+        // Self-contained art: HUD/terminal/caption are baked into the image,
+        // so overlay fields are intentionally omitted.
+      },
+      // --- Self-contained panels (text baked into the art) -------------
+      { src: "assets/12-syrena-terminals.png",   ratio: 1536 / 1024, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/13-ni-olvido.png",           ratio: 1122 / 1402, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/14-desierto.png",            ratio: 1023 / 1537, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/15-body-changes.png",        ratio: 1024 / 1536, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/16-duat-vessel.png",         ratio: 1024 / 1536, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/17-archive-never-died.png",  ratio: 1122 / 1402, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/18-diskdarian-blackbook.webp", ratio: 1024 / 1536, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/19-enough-is-enough.webp",   ratio: 1024 / 1536, contain: true, duration: 7000, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/20-second-signal.webp",      ratio: 1024 / 1536, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/21-ser-boricua.webp",        ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/22-jdm-triptych.webp",       ratio: 1492 / 1054, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/23-signal-in-walls.webp",    ratio: 1122 / 1402, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/24-cheating-mask.webp",      ratio: 1448 / 1086, contain: true, duration: 6600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/25-vieques-coldopen.webp",   ratio: 1536 / 1024, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/26-vejigante-permiso.webp",  ratio: 1536 / 1024, contain: true, duration: 7200, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/27-prologue-cover.png",        ratio: 1122 / 1402, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/28-syrena-profile.png",        ratio: 1023 / 1537, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/29-elenita-sheet.png",         ratio: 1024 / 1536, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/30-card-game-manual.png",      ratio: 1024 / 1536, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/31-bloodline-dialogue.png",    ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/32-split-process-dialogue.png", ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/33-justicia-memoria.webp",     ratio: 1023 / 1537, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
+      { src: "assets/34-osiris-godform.jpg",        ratio: 1024 / 1536, contain: true, duration: 7200, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "-1%"] },
+      { src: "assets/35-alley-watchers.jpg",        ratio: 1,           contain: true, duration: 6800, mode: "red",   motion: ["1.02", "0", "0", "1.10", "0", "0"] },
+      { src: "assets/36-duat-godform.jpg",          ratio: 1,           contain: true, duration: 7000, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "0"] },
+      { src: "assets/37-duat-cybergod.jpg",         ratio: 1,           contain: true, duration: 7000, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "0"] },
+      { src: "assets/38-skull-confrontation.jpg",   ratio: 1,           contain: true, duration: 7000, mode: "red",   motion: ["1.02", "0", "0", "1.10", "0", "0"] },
+      { src: "assets/39-osiris-spec.png", ratio: 1195 / 1316, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/40-shattered-reflection.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/41-resist-exist-reclaim.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/42-diskdarian-memory.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/43-lincoln-park-arrival.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/44-dead-phone-glow.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/45-devices-dead.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/47-corrupted-file-cover.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/48-artist-desk.png", ratio: 1295 / 1214, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/49-split-archive-cover.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/50-young-lords.png", ratio: 1025 / 1535, contain: true, duration: 6500, mode: "red" },
+      { src: "assets/51-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/52-extra.png", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/53-extra.png", ratio: 1183 / 1329, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/54-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/55-extra.png", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/56-extra.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/57-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/58-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/59-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/62-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/63-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/64-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/65-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/66-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/67-extra.png", ratio: 864 / 1821, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/68-extra.png", ratio: 1054 / 1492, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/69-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/70-extra.png", ratio: 1003 / 1568, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/71-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/72-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/73-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/74-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/75-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/76-extra.png", ratio: 1312 / 1199, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/77-extra.png", ratio: 1402 / 1122, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/80-extra.png", ratio: 1148 / 1370, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/81-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/82-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/83-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/84-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/85-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/86-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/87-extra.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/88-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/89-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/90-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/91-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/93-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/94-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/95-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/96-extra.png", ratio: 1254 / 1254, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/97-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/99-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/100-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/101-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/103-extra.png", ratio: 1022 / 1539, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/104-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/105-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/106-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/108-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/109-extra.png", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/110-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/111-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/112-extra.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/113-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/114-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/115-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/116-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/117-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/119-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/120-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/122-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/123-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/124-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/126-extra.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/127-extra.png", ratio: 1154 / 1363, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/128-extra.png", ratio: 1448 / 1086, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/129-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/130-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/131-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/132-extra.png", ratio: 1672 / 941, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/133-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/134-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/135-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/136-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/137-extra.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/138-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/139-extra.png", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/140-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/141-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/142-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/143-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/144-extra.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/145-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/146-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/147-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/148-extra.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/149-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/150-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/151-extra.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/152-extra.jpeg", ratio: 1402 / 1122, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/153-extra.jpeg", ratio: 1277 / 1025, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/154-extra.jpeg", ratio: 1320 / 1966, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/155-extra.jpeg", ratio: 1320 / 1947, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/156-extra.jpeg", ratio: 1320 / 1949, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/157-extra.jpeg", ratio: 1320 / 1914, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/158-extra.jpeg", ratio: 1320 / 1941, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/159-extra.jpeg", ratio: 1320 / 1942, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/160-extra.jpeg", ratio: 691 / 878, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/161-extra.jpeg", ratio: 1320 / 2141, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/162-extra.jpeg", ratio: 1320 / 1866, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/163-extra.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" }
+    ];
+
+    // ---- PLAY ORDER -------------------------------------------------------
+    // Sequence of the comic. Rearrange these lines to re-cut the story;
+    // every src in `beats` above must appear here exactly once.
+    const ORDER = [
+      "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
+      "assets/27-prologue-cover.png",          // OSIRIS.EXE prologue cover
+      "assets/01-prologue.png",                // the archive opens
+      "assets/30-card-game-manual.png",        // the card game was the manual (1994)
+      "assets/03-school.png",                  // the boy, 1987
+      "assets/05-questions.png",               // "don't say anything crazy"
+      "assets/04-cage.png",                    // some inherit silence
+      "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
+      "assets/43-lincoln-park-arrival.png",
+      "assets/23-signal-in-walls.webp",        // the signal was already inside the walls
+      "assets/44-dead-phone-glow.png",
+      "assets/45-devices-dead.png",
+      "assets/35-alley-watchers.jpg",          // alley watchers
+      "assets/28-syrena-profile.png",          // Syrena Sanchez — memory keeper
+      "assets/48-artist-desk.png",
+      "assets/12-syrena-terminals.png",        // they used the blueprint to make the game
+      "assets/31-bloodline-dialogue.png",      // someone else found the bloodline
+      "assets/32-split-process-dialogue.png",  // a split process you don't have access to
+      "assets/02-cooper-file.png",             // Behold a Pale Horse / the Cooper file
+      "assets/13-ni-olvido.png",               // ni olvido ni perdon
+      "assets/07-judge-protocol.png",          // the justice engine
+      "assets/19-enough-is-enough.webp",       // enough is enough
+      "assets/41-resist-exist-reclaim.png",
+      "assets/21-ser-boricua.webp",            // ser boricua es un honor
+      "assets/50-young-lords.png",
+      "assets/18-diskdarian-blackbook.webp",   // the youth are searching
+      "assets/42-diskdarian-memory.png",
+      "assets/06-enmascarado.png",             // we learned to unthread the grid
+      "assets/24-cheating-mask.webp",          // "that's cheating, you know?"
+      "assets/11-enmascarado-unit.png",        // enmascarado unit file
+      "assets/26-vejigante-permiso.webp",      // el vejigante no pide permiso
+      "assets/34-osiris-godform.jpg",          // osiris godform (crook & flail)
+      "assets/39-osiris-spec.png",
+      "assets/16-duat-vessel.png",             // keeper of the Duat / you were a vessel
+      "assets/36-duat-godform.jpg",            // cybernetic winged Duat god
+      "assets/37-duat-cybergod.jpg",           // duat cyber-deity
+      "assets/14-desierto.png",                // el desierto no perdona
+      "assets/40-shattered-reflection.png",
+      "assets/10-mask-signal.png",             // the mask is the signal
+      "assets/38-skull-confrontation.jpg",     // skull-mask confrontation (climax lead-in)
+      "assets/08-merge.png",                   // identity merge (climax)
+      "assets/20-second-signal.webp",          // you thought it started with Frank (twist)
+      "assets/49-split-archive-cover.png",
+      "assets/15-body-changes.png",            // the body changes, the signal remains
+      "assets/09-archive-rises.png",           // we are the archive
+      "assets/17-archive-never-died.png",      // the archive never died, it remembered (coda)
+      "assets/47-corrupted-file-cover.png",
+      "assets/29-elenita-sheet.png",           // bonus: Elenita de Jesus model sheet
+      "assets/22-jdm-triptych.webp",            // bonus plate
+      "assets/51-extra.png",
+      "assets/52-extra.png",
+      "assets/53-extra.png",
+      "assets/54-extra.png",
+      "assets/55-extra.png",
+      "assets/56-extra.png",
+      "assets/57-extra.png",
+      "assets/58-extra.png",
+      "assets/59-extra.png",
+      "assets/62-extra.png",
+      "assets/63-extra.png",
+      "assets/64-extra.png",
+      "assets/65-extra.png",
+      "assets/66-extra.png",
+      "assets/67-extra.png",
+      "assets/68-extra.png",
+      "assets/69-extra.png",
+      "assets/70-extra.png",
+      "assets/71-extra.png",
+      "assets/72-extra.png",
+      "assets/73-extra.png",
+      "assets/74-extra.png",
+      "assets/75-extra.png",
+      "assets/76-extra.png",
+      "assets/77-extra.png",
+      "assets/80-extra.png",
+      "assets/81-extra.png",
+      "assets/82-extra.png",
+      "assets/83-extra.png",
+      "assets/84-extra.png",
+      "assets/85-extra.png",
+      "assets/86-extra.png",
+      "assets/87-extra.png",
+      "assets/88-extra.png",
+      "assets/89-extra.png",
+      "assets/90-extra.png",
+      "assets/91-extra.png",
+      "assets/93-extra.png",
+      "assets/94-extra.png",
+      "assets/95-extra.png",
+      "assets/96-extra.png",
+      "assets/97-extra.png",
+      "assets/99-extra.png",
+      "assets/100-extra.png",
+      "assets/101-extra.png",
+      "assets/103-extra.png",
+      "assets/104-extra.png",
+      "assets/105-extra.png",
+      "assets/106-extra.png",
+      "assets/108-extra.png",
+      "assets/109-extra.png",
+      "assets/110-extra.png",
+      "assets/111-extra.png",
+      "assets/112-extra.png",
+      "assets/113-extra.png",
+      "assets/114-extra.png",
+      "assets/115-extra.png",
+      "assets/116-extra.png",
+      "assets/117-extra.png",
+      "assets/119-extra.png",
+      "assets/120-extra.png",
+      "assets/122-extra.png",
+      "assets/123-extra.png",
+      "assets/124-extra.png",
+      "assets/126-extra.png",
+      "assets/127-extra.png",
+      "assets/128-extra.png",
+      "assets/129-extra.png",
+      "assets/130-extra.png",
+      "assets/131-extra.png",
+      "assets/132-extra.png",
+      "assets/133-extra.png",
+      "assets/134-extra.png",
+      "assets/135-extra.png",
+      "assets/136-extra.png",
+      "assets/137-extra.png",
+      "assets/138-extra.png",
+      "assets/139-extra.png",
+      "assets/140-extra.png",
+      "assets/141-extra.png",
+      "assets/142-extra.png",
+      "assets/143-extra.png",
+      "assets/144-extra.png",
+      "assets/145-extra.png",
+      "assets/146-extra.png",
+      "assets/147-extra.png",
+      "assets/148-extra.png",
+      "assets/149-extra.png",
+      "assets/150-extra.png",
+      "assets/151-extra.png",
+      "assets/152-extra.jpeg",
+      "assets/153-extra.jpeg",
+      "assets/154-extra.jpeg",
+      "assets/155-extra.jpeg",
+      "assets/156-extra.jpeg",
+      "assets/157-extra.jpeg",
+      "assets/158-extra.jpeg",
+      "assets/159-extra.jpeg",
+      "assets/160-extra.jpeg",
+      "assets/161-extra.jpeg",
+      "assets/162-extra.jpeg",
+      "assets/163-extra.webp"
+    ];
+    beats.sort((a, b) => ORDER.indexOf(a.src) - ORDER.indexOf(b.src));
+
+    const app = document.getElementById("app");
+    const glitch = document.getElementById("glitch");
+    const counter = document.getElementById("counter");
+    const playButton = document.getElementById("play");
+    const bar = document.getElementById("bar");
+    let current = 0;
+    let playing = true;
+    let timer = 0;
+    let started = performance.now();
+
+    beats.forEach((beat, index) => {
+      const scene = document.createElement("section");
+      scene.className = `scene ${beat.mode === "red" ? "red" : ""}`;
+      scene.dataset.duration = beat.duration;
+      const motion = beat.motion || ["1.08", "0", "0", "1.18", "0", "0"];
+      scene.innerHTML = `
+        <div class="frame ${beat.contain ? "fit-contain" : ""}" style="--ratio:${beat.ratio}">
+          <img class="art" src="${beat.src}" alt="" loading="lazy" decoding="async" style="--duration:${Math.max(beat.duration / 1000, 6)}s; --start-scale:${motion[0]}; --start-x:${motion[1]}; --start-y:${motion[2]}; --end-scale:${motion[3]}; --end-x:${motion[4]}; --end-y:${motion[5]}">
+          ${beat.light ? `<div class="light" style="--x:${beat.light[0]}; --y:${beat.light[1]}"></div>` : ""}
+          ${beat.hud ? `<div class="hud">${beat.hud.replace(/\n/g, "<br>")}</div>` : ""}
+          ${beat.terminal ? `<div class="terminal ${beat.mode === "green" ? "green" : ""}">${beat.terminal.replace(/\n/g, "<br>")}</div>` : ""}
+          ${(beat.title || beat.text) ? `<div class="caption"><strong>${beat.title || ""}</strong><span>${beat.text || ""}</span></div>` : ""}
+        </div>
+      `;
+      app.appendChild(scene);
+      if (index === 0) {
+        const preload = new Image();
+        preload.src = beat.src;
+      }
+    });
+
+    const scenes = [...document.querySelectorAll(".scene")];
+
+    function show(index, burst = true) {
+      current = (index + scenes.length) % scenes.length;
+      scenes.forEach((scene, i) => scene.classList.toggle("active", i === current));
+      counter.textContent = `${String(current + 1).padStart(2, "0")} / ${String(scenes.length).padStart(2, "0")}`;
+      started = performance.now();
+      bar.style.width = "0%";
+      window.clearTimeout(timer);
+      if (burst) {
+        glitch.classList.remove("hit");
+        void glitch.offsetWidth;
+        glitch.classList.add("hit");
+      }
+      queue();
+    }
+
+    function queue() {
+      window.clearTimeout(timer);
+      if (!playing) return;
+      const duration = Number(scenes[current].dataset.duration || 6500);
+      timer = window.setTimeout(() => show(current + 1), duration);
+    }
+
+    function tick(now) {
+      if (playing) {
+        const duration = Number(scenes[current].dataset.duration || 6500);
+        bar.style.width = `${Math.min(100, ((now - started) / duration) * 100)}%`;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    document.getElementById("prev").addEventListener("click", () => show(current - 1));
+    document.getElementById("next").addEventListener("click", () => show(current + 1));
+    playButton.addEventListener("click", () => {
+      playing = !playing;
+      playButton.textContent = playing ? "Ⅱ" : "▶";
+      playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+      started = performance.now();
+      queue();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") show(current - 1);
+      if (event.key === "ArrowRight" || event.key === " ") show(current + 1);
+    });
+
+    show(0, false);
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

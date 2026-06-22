@@ -1,0 +1,7 @@
+.DS_Store
+# Large videos (too big for git)
+assets/_videos/
+# Personal phone photos
+assets/IMG_*
+# Local backups
+index.html.bak*
