@@ -288,6 +288,31 @@
       user-select: none;
     }
 
+    /* TEMP editing aid — panel id tag. Toggle with the "i" key.
+       Remove this block (and #tag markup + JS) before shipping. */
+    #tag {
+      position: absolute;
+      z-index: 45;
+      left: 50%;
+      top: 8px;
+      transform: translateX(-50%);
+      padding: 5px 12px;
+      text-align: center;
+      color: #fff3c0;
+      background: rgba(0, 0, 0, .82);
+      border: 1px solid var(--amber);
+      font-size: 13px;
+      letter-spacing: .04em;
+      box-shadow: 0 0 16px rgba(217,155,69,.4);
+      pointer-events: none;
+      user-select: text;
+      white-space: nowrap;
+    }
+
+    #tag.hidden { display: none; }
+
+    #tag b { color: var(--amber); font-size: 15px; }
+
     .progress {
       position: absolute;
       z-index: 29;
@@ -303,6 +328,27 @@
       width: 0%;
       height: 100%;
       background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+    }
+
+    /* Slow rolling scanline band + brightness flicker — sits above the
+       static scanlines (::before) and noise (::after) for a live CRT feel. */
+    .crt {
+      position: absolute;
+      inset: 0;
+      z-index: 22;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(65,255,122,.05) 47%,
+        rgba(65,255,122,.13) 50%,
+        rgba(65,255,122,.05) 53%,
+        transparent 100%
+      );
+      background-size: 100% 240%;
+      opacity: .5;
+      animation: crtRoll 7.5s linear infinite, crtFlicker 5.5s steps(40) infinite;
     }
 
     .glitch {
@@ -387,11 +433,22 @@
     }
 
     @keyframes glitch {
-      0% { opacity: 0; transform: translateX(0); }
-      18% { opacity: .9; transform: translateX(-10px); }
-      36% { opacity: .35; transform: translateX(8px); }
-      60% { opacity: .8; transform: translateX(-4px); }
-      100% { opacity: 0; transform: translateX(0); }
+      0% { opacity: 0; transform: translate(0, 0); }
+      18% { opacity: .9; transform: translate(-10px, 5px); }
+      36% { opacity: .35; transform: translate(8px, -4px); }
+      60% { opacity: .8; transform: translate(-4px, 2px); }
+      100% { opacity: 0; transform: translate(0, 0); }
+    }
+
+    @keyframes crtRoll {
+      from { background-position: 0 -120%; }
+      to { background-position: 0 120%; }
+    }
+
+    @keyframes crtFlicker {
+      0%, 100% { opacity: .42; }
+      50% { opacity: .55; }
+      92% { opacity: .36; }
     }
 
     @keyframes noise {
@@ -404,10 +461,26 @@
       50% { opacity: 1; transform: scale(1.1); }
       100% { opacity: 1; transform: scale(1); }
     }
+
+    /* Respect users who ask the OS to minimize motion: hold each panel
+       still, keep the look, drop the drift / flicker / noise / glitch. */
+    @media (prefers-reduced-motion: reduce) {
+      #app { animation: none; }
+      #app::after,
+      .crt,
+      .light { animation: none; }
+      .art {
+        animation: none;
+        transform: scale(1.04);
+      }
+      .scene { transition: opacity .3s ease; transform: none; }
+      .glitch.hit { animation: none; }
+    }
   </style>
 </head>
 <body>
   <main id="app" aria-label="OSIRIS.EXE Pale Horse Protocol motion comic">
+    <div class="crt" aria-hidden="true"></div>
     <section class="scene active" data-duration="5200">
       <div class="title-card">
         <div>
@@ -425,6 +498,7 @@
     <button id="next" type="button" aria-label="Next panel">›</button>
   </div>
   <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+  <div id="tag" aria-hidden="true"></div>
   <div id="glitch" class="glitch" aria-hidden="true"></div>
   <div id="views" aria-label="View count" hidden>◉ <span id="views-n">—</span></div>
 
@@ -453,18 +527,6 @@
         mode: "green",
         light: ["56%", "50%"],
         motion: ["1.05", "-1%", "0", "1.16", "1%", "0"]
-      },
-      {
-        src: "assets/05-questions.png",
-        ratio: 1,
-        duration: 6800,
-        hud: "FAMILY NODE // PRE-SIGNAL",
-        title: "Questions",
-        text: "Some children inherit money. Some inherit silence. OSIRIS inherited questions.",
-        terminal: "QUERY: WHAT IF THE CRAZY THING IS THE TRUTH?",
-        mode: "green",
-        light: ["72%", "42%"],
-        motion: ["1.04", "0", "0", "1.13", "-1.5%", "1%"]
       },
       {
         src: "assets/02-cooper-file.png",
@@ -564,22 +626,15 @@
       { src: "assets/19-enough-is-enough.webp",   ratio: 1024 / 1536, contain: true, duration: 7000, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/20-second-signal.webp",      ratio: 1024 / 1536, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/21-ser-boricua.webp",        ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/22-jdm-triptych.webp",       ratio: 1492 / 1054, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/23-signal-in-walls.webp",    ratio: 1122 / 1402, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/24-cheating-mask.webp",      ratio: 1448 / 1086, contain: true, duration: 6600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/25-vieques-coldopen.webp",   ratio: 1536 / 1024, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/26-vejigante-permiso.webp",  ratio: 1536 / 1024, contain: true, duration: 7200, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/27-prologue-cover.png",        ratio: 1122 / 1402, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/28-syrena-profile.png",        ratio: 1023 / 1537, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/29-elenita-sheet.png",         ratio: 1024 / 1536, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/31-bloodline-dialogue.png",    ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/32-split-process-dialogue.png", ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
       { src: "assets/33-justicia-memoria.webp",     ratio: 1023 / 1537, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/34-osiris-godform.jpg",        ratio: 1024 / 1536, contain: true, duration: 7200, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "-1%"] },
-      { src: "assets/35-alley-watchers.jpg",        ratio: 1,           contain: true, duration: 6800, mode: "red",   motion: ["1.02", "0", "0", "1.10", "0", "0"] },
-      { src: "assets/36-duat-godform.jpg",          ratio: 1,           contain: true, duration: 7000, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "0"] },
-      { src: "assets/37-duat-cybergod.jpg",         ratio: 1,           contain: true, duration: 7000, mode: "green", motion: ["1.02", "0", "0", "1.10", "0", "0"] },
-      { src: "assets/38-skull-confrontation.jpg",   ratio: 1,           contain: true, duration: 7000, mode: "red",   motion: ["1.02", "0", "0", "1.10", "0", "0"] },
       { src: "assets/39-osiris-spec.png", ratio: 1195 / 1316, contain: true, duration: 6500, mode: "green" },
       { src: "assets/40-shattered-reflection.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/41-resist-exist-reclaim.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
@@ -596,7 +651,8 @@
       { src: "assets/53-four-pages-throne.png", ratio: 1183 / 1329, contain: true, duration: 6500, mode: "red" },
       { src: "assets/54-split-archive-young-lords.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "red" },
       { src: "assets/55-prologue-p7.png", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/56-intro-terminal.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/56-intro-terminal.png", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green",
+        terminal: "EN // ARCHIVE TRANSLATION\\n> THIS IS NOT A STORY OF SUPERHEROES\\n> THIS IS NOT A STORY OF VILLAINS\\n> THIS IS A STORY OF WHAT THEY DID\\n> AND WHAT SURVIVED\\n> OSIRIS.EXE\\n> ARCHIVE OPEN\\n> BEGIN" },
       { src: "assets/57-classroom-1989.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
       { src: "assets/58-throne-signal-detected.png", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "red" },
       { src: "assets/59-duat-protocol.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
@@ -653,7 +709,6 @@
       { src: "assets/140-anomaly-standdown.png", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
       { src: "assets/142-signal-returns.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/145-price-unspoken.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/148-false-gods-throne.png", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" },
       { src: "assets/150-walks-to-front.png", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/153-osiris-graffiti.jpeg", ratio: 1277 / 1025, contain: true, duration: 6500, mode: "green" },
       { src: "assets/155-prologue-p1.jpeg", ratio: 1320 / 1947, contain: true, duration: 6500, mode: "green" },
@@ -666,16 +721,12 @@
     // every src in `beats` above must appear here exactly once.
     const ORDER = [
       "assets/56-intro-terminal.png",
-      "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
       "assets/27-prologue-cover.png",          // OSIRIS.EXE prologue cover
       "assets/155-prologue-p1.jpeg",
-      "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
-      "assets/43-lincoln-park-arrival.png",
       "assets/03-school.png",                  // the boy, 1987
       "assets/57-classroom-1989.png",
       "assets/70-week-isnt-real.png",
       "assets/150-walks-to-front.png",
-      "assets/05-questions.png",               // "don't say anything crazy"
       "assets/114-prologue-p6.png",
       "assets/55-prologue-p7.png",
       "assets/04-cage.png",                    // some inherit silence
@@ -689,7 +740,6 @@
       "assets/86-osiris-issue1.png",
       "assets/90-dead-no-battery.png",
       "assets/45-devices-dead.png",
-      "assets/35-alley-watchers.jpg",          // alley watchers
       "assets/28-syrena-profile.png",          // Syrena Sanchez — memory keeper
       "assets/48-artist-desk.png",
       "assets/73-drawings-talking.png",
@@ -704,12 +754,14 @@
       "assets/77-night-house.png",
       "assets/31-bloodline-dialogue.png",      // someone else found the bloodline
       "assets/32-split-process-dialogue.png",  // a split process you don't have access to
+      "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
       "assets/02-cooper-file.png",             // Behold a Pale Horse / the Cooper file
       "assets/13-ni-olvido.png",               // ni olvido ni perdon
       "assets/07-judge-protocol.png",          // the justice engine
       "assets/19-enough-is-enough.webp",       // enough is enough
       "assets/41-resist-exist-reclaim.png",
       "assets/104-palante.png",
+      "assets/18-diskdarian-blackbook.webp",   // the youth are searching
       "assets/21-ser-boricua.webp",            // ser boricua es un honor
       "assets/153-osiris-graffiti.jpeg",
       "assets/50-young-lords.png",
@@ -722,7 +774,6 @@
       "assets/105-world-not-understand.png",
       "assets/140-anomaly-standdown.png",
       "assets/111-the-map.png",
-      "assets/18-diskdarian-blackbook.webp",   // the youth are searching
       "assets/65-static-kids.png",
       "assets/82-black-sun-mural.png",
       "assets/72-diskdarian-nitano.png",
@@ -735,7 +786,6 @@
       "assets/24-cheating-mask.webp",          // "that's cheating, you know?"
       "assets/11-enmascarado-unit.png",        // enmascarado unit file
       "assets/26-vejigante-permiso.webp",      // el vejigante no pide permiso
-      "assets/34-osiris-godform.jpg",          // osiris godform (crook & flail)
       "assets/39-osiris-spec.png",
       "assets/106-sigil-legend.png",
       "assets/66-osiris-the-code.png",
@@ -747,10 +797,7 @@
       "assets/129-birth-of-osiris.png",
       "assets/53-four-pages-throne.png",
       "assets/58-throne-signal-detected.png",
-      "assets/148-false-gods-throne.png",
       "assets/163-giger-osiris-throne.webp",
-      "assets/36-duat-godform.jpg",            // cybernetic winged Duat god
-      "assets/37-duat-cybergod.jpg",           // duat cyber-deity
       "assets/59-duat-protocol.png",
       "assets/14-desierto.png",                // el desierto no perdona
       "assets/40-shattered-reflection.png",
@@ -761,12 +808,12 @@
       "assets/100-diskdarian-04.png",
       "assets/116-archive-remembers.png",
       "assets/10-mask-signal.png",             // the mask is the signal
-      "assets/38-skull-confrontation.jpg",     // skull-mask confrontation (climax lead-in)
       "assets/08-merge.png",                   // identity merge (climax)
       "assets/63-merge-override.png",
       "assets/67-breaking-evolving.png",
       "assets/87-i-am-still-here.png",
       "assets/20-second-signal.webp",          // you thought it started with Frank (twist)
+      "assets/43-lincoln-park-arrival.png",
       "assets/62-guanica-1898.png",
       "assets/112-faln-1898.png",
       "assets/132-thing-from-trench.png",
@@ -778,13 +825,13 @@
       "assets/88-uprising-protocol.png",
       "assets/17-archive-never-died.png",      // the archive never died, it remembered (coda)
       "assets/47-corrupted-file-cover.png",
-      "assets/29-elenita-sheet.png",           // bonus: Elenita de Jesus model sheet
-      "assets/22-jdm-triptych.webp",            // bonus plate
+      "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
     ];
     beats.sort((a, b) => ORDER.indexOf(a.src) - ORDER.indexOf(b.src));
 
     const app = document.getElementById("app");
     const glitch = document.getElementById("glitch");
+    const tag = document.getElementById("tag");
     const counter = document.getElementById("counter");
     const playButton = document.getElementById("play");
     const bar = document.getElementById("bar");
@@ -797,13 +844,14 @@
       const scene = document.createElement("section");
       scene.className = `scene ${beat.mode === "red" ? "red" : ""}`;
       scene.dataset.duration = beat.duration;
+      scene.dataset.src = beat.src;
       const motion = beat.motion || ["1.08", "0", "0", "1.18", "0", "0"];
       scene.innerHTML = `
         <div class="frame ${beat.contain ? "fit-contain" : ""}" style="--ratio:${beat.ratio}">
           <img class="art" src="${beat.src}" alt="" loading="lazy" decoding="async" style="--duration:${Math.max(beat.duration / 1000, 6)}s; --start-scale:${motion[0]}; --start-x:${motion[1]}; --start-y:${motion[2]}; --end-scale:${motion[3]}; --end-x:${motion[4]}; --end-y:${motion[5]}">
           ${beat.light ? `<div class="light" style="--x:${beat.light[0]}; --y:${beat.light[1]}"></div>` : ""}
-          ${beat.hud ? `<div class="hud">${beat.hud.replace(/\n/g, "<br>")}</div>` : ""}
-          ${beat.terminal ? `<div class="terminal ${beat.mode === "green" ? "green" : ""}">${beat.terminal.replace(/\n/g, "<br>")}</div>` : ""}
+          ${beat.hud ? `<div class="hud">${beat.hud.replace(/\\n/g, "<br>")}</div>` : ""}
+          ${beat.terminal ? `<div class="terminal ${beat.mode === "green" ? "green" : ""}">${beat.terminal.replace(/\\n/g, "<br>")}</div>` : ""}
           ${(beat.title || beat.text) ? `<div class="caption"><strong>${beat.title || ""}</strong><span>${beat.text || ""}</span></div>` : ""}
         </div>
       `;
@@ -820,6 +868,9 @@
       current = (index + scenes.length) % scenes.length;
       scenes.forEach((scene, i) => scene.classList.toggle("active", i === current));
       counter.textContent = `${String(current + 1).padStart(2, "0")} / ${String(scenes.length).padStart(2, "0")}`;
+      // TEMP editing aid — show this panel's position + filename.
+      const src = scenes[current].dataset.src;
+      tag.innerHTML = `<b>#${String(current + 1).padStart(2, "0")}</b> &nbsp; ${src ? src.replace("assets/", "") : "— intro title card —"}`;
       started = performance.now();
       bar.style.width = "0%";
       window.clearTimeout(timer);
@@ -827,6 +878,12 @@
         glitch.classList.remove("hit");
         void glitch.offsetWidth;
         glitch.classList.add("hit");
+      }
+      // Warm the next panel's image so the cut never flashes an unloaded frame.
+      const upcoming = scenes[(current + 1) % scenes.length].querySelector("img.art");
+      if (upcoming) {
+        const pre = new Image();
+        pre.src = upcoming.src;
       }
       queue();
     }
@@ -859,6 +916,7 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "ArrowLeft") show(current - 1);
       if (event.key === "ArrowRight" || event.key === " ") show(current + 1);
+      if (event.key === "i" || event.key === "I") tag.classList.toggle("hidden");  // TEMP: toggle id tag
     });
 
     show(0, false);
