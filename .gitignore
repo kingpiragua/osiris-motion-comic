@@ -5,3 +5,5 @@ assets/_videos/
 assets/IMG_*
 # Local backups
 index.html.bak*
+# Jupyter checkpoints
+.ipynb_checkpoints/
