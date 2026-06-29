@@ -288,30 +288,6 @@
       user-select: none;
     }
 
-    /* TEMP editing aid — panel id tag. Toggle with the "i" key.
-       Remove this block (and #tag markup + JS) before shipping. */
-    #tag {
-      position: absolute;
-      z-index: 45;
-      left: 50%;
-      top: 8px;
-      transform: translateX(-50%);
-      padding: 5px 12px;
-      text-align: center;
-      color: #fff3c0;
-      background: rgba(0, 0, 0, .82);
-      border: 1px solid var(--amber);
-      font-size: 13px;
-      letter-spacing: .04em;
-      box-shadow: 0 0 16px rgba(217,155,69,.4);
-      pointer-events: none;
-      user-select: text;
-      white-space: nowrap;
-    }
-
-    #tag.hidden { display: none; }
-
-    #tag b { color: var(--amber); font-size: 15px; }
 
     .progress {
       position: absolute;
@@ -498,7 +474,6 @@
     <button id="next" type="button" aria-label="Next panel">›</button>
   </div>
   <div class="progress" aria-hidden="true"><span id="bar"></span></div>
-  <div id="tag" aria-hidden="true"></div>
   <div id="glitch" class="glitch" aria-hidden="true"></div>
   <div id="views" aria-label="View count" hidden>◉ <span id="views-n">—</span></div>
 
@@ -831,7 +806,6 @@
 
     const app = document.getElementById("app");
     const glitch = document.getElementById("glitch");
-    const tag = document.getElementById("tag");
     const counter = document.getElementById("counter");
     const playButton = document.getElementById("play");
     const bar = document.getElementById("bar");
@@ -887,7 +861,6 @@
         mounted.forEach(el => el.classList.remove("active"));
         titleCard.classList.add("active");
         counter.textContent = `00 / ${String(total).padStart(2, "0")}`;
-        tag.innerHTML = `<b>#00</b> &nbsp; — intro title card —`;
         started = performance.now();
         bar.style.width = "0%";
         queue();
@@ -913,7 +886,6 @@
 
       counter.textContent = `${String(current + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
       const src = beats[current].src;
-      tag.innerHTML = `<b>#${String(current + 1).padStart(2, "0")}</b> &nbsp; ${src ? src.replace("assets/", "") : ""}`;
       started = performance.now();
       bar.style.width = "0%";
       if (burst) {
@@ -955,7 +927,6 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "ArrowLeft") show(current - 1);
       if (event.key === "ArrowRight" || event.key === " ") show(current + 1);
-      if (event.key === "i" || event.key === "I") tag.classList.toggle("hidden");  // TEMP: toggle id tag
     });
 
     counter.textContent = `00 / ${String(beats.length).padStart(2, "0")}`;
