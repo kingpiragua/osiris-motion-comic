@@ -125,10 +125,10 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      transform: scale(var(--start-scale, 1.08)) translate3d(var(--start-x, 0), var(--start-y, 0), 0);
-      transform-origin: var(--origin, center center);
-      animation: drift var(--duration, 8s) ease-in-out infinite alternate;
+      object-fit: contain;
+      background: #030303;
+      transform: translate3d(var(--pan-from, 0%), 0, 0) scale(var(--pan-scale, 1.04));
+      animation: pan var(--duration, 8s) ease-in-out infinite alternate;
       animation-play-state: paused;
     }
 
@@ -136,11 +136,6 @@
     .scene.active .art {
       filter: contrast(1.07) saturate(.95) brightness(.9);
       animation-play-state: running;
-    }
-
-    .fit-contain .art {
-      object-fit: contain;
-      background: #030303;
     }
 
     .light {
@@ -398,9 +393,9 @@
       }
     }
 
-    @keyframes drift {
-      from { transform: scale(var(--start-scale, 1.08)) translate3d(var(--start-x, 0), var(--start-y, 0), 0); }
-      to { transform: scale(var(--end-scale, 1.18)) translate3d(var(--end-x, 0), var(--end-y, 0), 0); }
+    @keyframes pan {
+      from { transform: translate3d(var(--pan-from, -2%), 0, 0) scale(var(--pan-scale, 1.04)); }
+      to   { transform: translate3d(var(--pan-to,    2%), 0, 0) scale(var(--pan-scale, 1.04)); }
     }
 
     @keyframes pulse {
@@ -816,15 +811,17 @@
     let timer = 0;
     let started = performance.now();
 
-    function buildScene(beat) {
+    function buildScene(beat, index) {
       const scene = document.createElement("section");
       scene.className = `scene ${beat.mode === "red" ? "red" : ""}`;
       scene.dataset.duration = beat.duration;
       scene.dataset.src = beat.src;
-      const motion = beat.motion || ["1.08", "0", "0", "1.18", "0", "0"];
+      // Alternate pan direction per panel: even → left-to-right, odd → right-to-left
+      const panFrom = index % 2 === 0 ? "-2%" : "2%";
+      const panTo   = index % 2 === 0 ? "2%"  : "-2%";
       scene.innerHTML = `
-        <div class="frame ${beat.contain ? "fit-contain" : ""}" style="--ratio:${beat.ratio}">
-          <img class="art" src="${beat.src}" alt="" decoding="async" style="--duration:${Math.max(beat.duration / 1000, 6)}s; --start-scale:${motion[0]}; --start-x:${motion[1]}; --start-y:${motion[2]}; --end-scale:${motion[3]}; --end-x:${motion[4]}; --end-y:${motion[5]}">
+        <div class="frame" style="--ratio:${beat.ratio}">
+          <img class="art" src="${beat.src}" alt="" decoding="async" style="--duration:${Math.max(beat.duration / 1000, 6)}s; --pan-from:${panFrom}; --pan-to:${panTo}">
           ${beat.light ? `<div class="light" style="--x:${beat.light[0]}; --y:${beat.light[1]}"></div>` : ""}
           ${beat.hud ? `<div class="hud">${beat.hud.replace(/\\n/g, "<br>")}</div>` : ""}
           ${beat.terminal ? `<div class="terminal ${beat.mode === "green" ? "green" : ""}">${beat.terminal.replace(/\\n/g, "<br>")}</div>` : ""}
@@ -839,7 +836,7 @@
 
     function mount(index) {
       if (mounted.has(index)) return mounted.get(index);
-      const el = buildScene(beats[index]);
+      const el = buildScene(beats[index], index);
       app.appendChild(el);
       mounted.set(index, el);
       return el;
