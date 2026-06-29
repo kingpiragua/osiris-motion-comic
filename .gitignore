@@ -3,7 +3,12 @@
 assets/_videos/
 # Personal phone photos
 assets/IMG_*
+# New panels (staged here until renamed and converted to WebP)
+assets/new-panel-*.png
 # Local backups
 index.html.bak*
 # Jupyter checkpoints
 .ipynb_checkpoints/
+# Bibles, story docs, HTML archives — too large for git
+docs/
+archive/
