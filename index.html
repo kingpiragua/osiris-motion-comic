@@ -835,7 +835,9 @@
     const counter = document.getElementById("counter");
     const playButton = document.getElementById("play");
     const bar = document.getElementById("bar");
-    let current = 0;
+    const titleCard = document.querySelector("section.scene[data-duration]");
+    const titleDuration = Number(titleCard?.dataset.duration || 7000);
+    let current = -1;
     let playing = true;
     let timer = 0;
     let started = performance.now();
@@ -876,7 +878,23 @@
 
     function show(index, burst = true) {
       const total = beats.length;
-      current = (index + total) % total;
+      window.clearTimeout(timer);
+
+      // -1 means title card
+      if (index < 0) {
+        current = -1;
+        document.querySelectorAll(".scene").forEach(el => el.classList.remove("active"));
+        mounted.forEach(el => el.classList.remove("active"));
+        titleCard.classList.add("active");
+        counter.textContent = `00 / ${String(total).padStart(2, "0")}`;
+        tag.innerHTML = `<b>#00</b> &nbsp; — intro title card —`;
+        started = performance.now();
+        bar.style.width = "0%";
+        queue();
+        return;
+      }
+
+      current = index % total;
 
       // Evict scenes outside the ±2 window to free memory.
       for (const [i] of mounted) {
@@ -886,18 +904,18 @@
       }
 
       // Mount current + neighbours.
-      const prevEl = mount((current - 1 + total) % total);
-      const curEl  = mount(current);
-      const nextEl = mount((current + 1) % total);
+      mount((current - 1 + total) % total);
+      mount(current);
+      mount((current + 1) % total);
 
+      document.querySelectorAll(".scene").forEach(el => el.classList.remove("active"));
       mounted.forEach((el, i) => el.classList.toggle("active", i === current));
 
       counter.textContent = `${String(current + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
       const src = beats[current].src;
-      tag.innerHTML = `<b>#${String(current + 1).padStart(2, "0")}</b> &nbsp; ${src ? src.replace("assets/", "") : "— intro title card —"}`;
+      tag.innerHTML = `<b>#${String(current + 1).padStart(2, "0")}</b> &nbsp; ${src ? src.replace("assets/", "") : ""}`;
       started = performance.now();
       bar.style.width = "0%";
-      window.clearTimeout(timer);
       if (burst) {
         glitch.classList.remove("hit");
         void glitch.offsetWidth;
@@ -906,17 +924,20 @@
       queue();
     }
 
+    function currentDuration() {
+      if (current === -1) return titleDuration;
+      return Number(beats[current]?.duration || 6500);
+    }
+
     function queue() {
       window.clearTimeout(timer);
       if (!playing) return;
-      const duration = Number(scenes[current].dataset.duration || 6500);
-      timer = window.setTimeout(() => show(current + 1), duration);
+      timer = window.setTimeout(() => show(current + 1), currentDuration());
     }
 
     function tick(now) {
       if (playing) {
-        const duration = Number(scenes[current].dataset.duration || 6500);
-        bar.style.width = `${Math.min(100, ((now - started) / duration) * 100)}%`;
+        bar.style.width = `${Math.min(100, ((now - started) / currentDuration()) * 100)}%`;
       }
       requestAnimationFrame(tick);
     }
@@ -937,7 +958,8 @@
       if (event.key === "i" || event.key === "I") tag.classList.toggle("hidden");  // TEMP: toggle id tag
     });
 
-    show(0, false);
+    counter.textContent = `00 / ${String(beats.length).padStart(2, "0")}`;
+    queue();
     requestAnimationFrame(tick);
 
     // View counter — increments once per load via a free counter service.
