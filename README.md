@@ -8,6 +8,8 @@ panel. 115 hand-curated panels that auto-advance through the OSIRIS.EXE story.
 
 **▶ Play it live:** https://kingpiragua.github.io/osiris-motion-comic/
 
+**ℹ About the work & artist:** [`ABOUT.md`](ABOUT.md)
+
 ---
 
 ## What it is
