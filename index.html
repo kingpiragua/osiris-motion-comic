@@ -127,7 +127,7 @@
       height: 100%;
       object-fit: contain;
       background: #030303;
-      transform: translate3d(var(--pan-from, 0%), 0, 0) scale(var(--pan-scale, 1.04));
+      transform: translate3d(0, 0, 0) scale(1);
       animation: pan var(--duration, 8s) ease-in-out infinite alternate;
       animation-play-state: paused;
     }
@@ -394,8 +394,11 @@
     }
 
     @keyframes pan {
-      from { transform: translate3d(var(--pan-from, -2%), 0, 0) scale(var(--pan-scale, 1.04)); }
-      to   { transform: translate3d(var(--pan-to,    2%), 0, 0) scale(var(--pan-scale, 1.04)); }
+      /* Start fully framed (whole panel visible, no crop), then ease into a
+         gentle push-in. scale 1.05 leaves room for the <=2% drift without
+         exposing the frame background, so edges are never hard-clipped at rest. */
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to   { transform: translate3d(var(--pan-to, 1.5%), 0, 0) scale(1.05); }
     }
 
     @keyframes pulse {
@@ -442,7 +445,7 @@
       .light { animation: none; }
       .art {
         animation: none;
-        transform: scale(1.04);
+        transform: none;
       }
       .scene { transition: opacity .3s ease; transform: none; }
       .glitch.hit { animation: none; }
@@ -680,19 +683,59 @@
       { src: "assets/142-signal-returns.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/145-price-unspoken.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
       { src: "assets/150-walks-to-front.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/153-osiris-graffiti.jpeg", ratio: 1277 / 1025, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/155-prologue-p1.jpeg", ratio: 1320 / 1947, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/161-father-origin-node.jpeg", ratio: 1320 / 2141, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/163-giger-osiris-throne.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" }
+      { src: "assets/153-osiris-graffiti.webp", ratio: 1277 / 1025, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/155-prologue-p1.webp", ratio: 1320 / 1947, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/161-father-origin-node.webp", ratio: 1320 / 2141, contain: true, duration: 6500, mode: "green" },
+      { src: "assets/163-giger-osiris-throne.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" },
+      // --- New panels (woven into the story via ORDER below) -----------
+      { src: "assets/new-panel-01.webp", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "red" },   // FALN / Fraunces Tavern 1975 / revolución
+      { src: "assets/new-panel-02.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // "and the truth wants out"
+      { src: "assets/new-panel-03.webp", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "green" }, // signal grid, glowing eyes
+      { src: "assets/new-panel-04.webp", ratio: 1254 / 1254, contain: true, duration: 6500, mode: "green" }, // RESIST. EXIST. RECLAIM. cover
+      { src: "assets/new-panel-05.webp", ratio: 1402 / 1122, contain: true, duration: 6500, mode: "red" },   // desde 1898 la invasión continúa
+      { src: "assets/new-panel-06.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" }, // SIGNAL ARCHIVE #002 — the frequency file
+      { src: "assets/new-panel-07.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // OSIRIS.EXE terminal room
+      { src: "assets/new-panel-08.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" }, // the city sees / the city remembers
+      { src: "assets/new-panel-09.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" }, // Black Sun on the wall, Humboldt
+      { src: "assets/new-panel-10.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" }, // figure before the Black Sun
+      { src: "assets/new-panel-11.webp", ratio: 1148 / 1370, contain: true, duration: 6500, mode: "green" }, // memory-keeper at the CRT static
+      { src: "assets/new-panel-12.webp", ratio: 1295 / 1214, contain: true, duration: 6500, mode: "green" }, // la verdad está en la calle
+      { src: "assets/new-panel-13.webp", ratio: 1312 / 1199, contain: true, duration: 6500, mode: "green" }, // the journal — "I keep drawing this"
+      { src: "assets/new-panel-14.webp", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green" }, // 2:47 AM — some things transmit
+      { src: "assets/new-panel-15.webp", ratio: 1254 / 1254, contain: true, duration: 6500, mode: "green" }, // static TV — Black Sun ghost
+      { src: "assets/new-panel-16.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" }, // hand drawing the sigil
+      { src: "assets/new-panel-17.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" }, // "I didn't draw that"
+      { src: "assets/new-panel-18.webp", ratio: 1195 / 1316, contain: true, duration: 6500, mode: "green" }, // OSIRIS — ancient digital entity spec
+      { src: "assets/new-panel-19.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // dead. no battery. impossible.
+      { src: "assets/new-panel-20.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" }, // all devices glitch — 2:47 KZZT
+      { src: "assets/new-panel-21.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // battery dead, screen glowed OSIRIS
+      { src: "assets/new-panel-22.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // "Hello...?"
+      { src: "assets/new-panel-23.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" }, // then the drawings started talking back
+      { src: "assets/new-panel-24.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" }, // recap collage
+      { src: "assets/new-panel-25.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // DISK DARIAN — THE SPLIT ARCHIVE vol 01 cover
+      { src: "assets/new-panel-27.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // Split Archive — basement page
+      { src: "assets/new-panel-28.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },   // POWER IS MEMORY
+      { src: "assets/new-panel-29.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // OSIRIS on the screen
+      { src: "assets/new-panel-30.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" }, // Split Archive — Young Lords Party
+      { src: "assets/new-panel-31.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },   // MEMORY TRANSFER 91% — all of it
+      { src: "assets/new-panel-32.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },   // the truth, or the version they left you
+      { src: "assets/new-panel-33.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "red" },   // I AM DISKDARIAN — the split is mine
+      { src: "assets/new-panel-34.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" }, // split complete — end of volume 01
+      { src: "assets/new-panel-35.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // THE ARCHIVE IS US
+      { src: "assets/new-panel-36.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },   // WE REMEMBER. WE RESIST. WE RISE. — vol 002
+      { src: "assets/new-panel-37.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" }, // we are the archive / the archive is alive
+      { src: "assets/new-panel-38.webp", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" }, // OSIRIS.exe — divine protection
+      { src: "assets/new-panel-39.webp", ratio: 1054 / 1492, contain: true, duration: 6500, mode: "green" }  // OSIRIS.exe — split protocol cover
     ];
 
     // ---- PLAY ORDER -------------------------------------------------------
     // Sequence of the comic. Rearrange these lines to re-cut the story;
     // every src in `beats` above must appear here exactly once.
     const ORDER = [
+      // ---- INTRO / PROLOGUE -------------------------------------------
       "assets/56-intro-terminal.webp",
       "assets/27-prologue-cover.webp",          // OSIRIS.EXE prologue cover
-      "assets/155-prologue-p1.jpeg",
+      "assets/155-prologue-p1.webp",
       "assets/03-school.webp",                  // the boy, 1987
       "assets/57-classroom-1989.webp",
       "assets/70-week-isnt-real.webp",
@@ -700,28 +743,51 @@
       "assets/114-prologue-p6.webp",
       "assets/55-prologue-p7.webp",
       "assets/04-cage.webp",                    // some inherit silence
+      // ---- THE SIGNAL (the Black Sun appears) -------------------------
       "assets/23-signal-in-walls.webp",        // the signal was already inside the walls
+      "assets/new-panel-09.webp",              // Black Sun on the wall, Humboldt
+      "assets/new-panel-10.webp",              // figure before the Black Sun
       "assets/96-signal-sigil.webp",
+      "assets/new-panel-13.webp",              // the journal — "I keep drawing this"
+      "assets/new-panel-16.webp",              // hand drawing the sigil
+      "assets/new-panel-17.webp",              // "I didn't draw that"
       "assets/97-dad-call-failed.webp",
+      "assets/new-panel-22.webp",              // "Hello...?"
       "assets/115-hello-phone.webp",
+      "assets/new-panel-21.webp",              // battery dead, screen glowed OSIRIS
       "assets/134-father-archived.webp",
-      "assets/161-father-origin-node.jpeg",
+      "assets/161-father-origin-node.webp",
       "assets/44-dead-phone-glow.webp",
       "assets/86-osiris-issue1.webp",
+      "assets/new-panel-19.webp",              // dead. no battery. impossible.
       "assets/90-dead-no-battery.webp",
+      "assets/new-panel-20.webp",              // all devices glitch — 2:47 KZZT
       "assets/45-devices-dead.webp",
+      // ---- MEMORY KEEPER / INVESTIGATION ------------------------------
       "assets/28-syrena-profile.webp",          // Syrena Sanchez — memory keeper
+      "assets/new-panel-11.webp",              // at the CRT static
+      "assets/new-panel-14.webp",              // 2:47 AM — some things transmit
+      "assets/new-panel-12.webp",              // la verdad está en la calle
       "assets/48-artist-desk.webp",
       "assets/73-drawings-talking.webp",
+      "assets/new-panel-23.webp",              // then the drawings started talking back
       "assets/76-black-sun-journal.webp",
       "assets/84-i-didnt-draw.webp",
       "assets/89-dont-remember-drawing.webp",
+      "assets/new-panel-24.webp",              // recap collage
       "assets/12-syrena-terminals.webp",        // they used the blueprint to make the game
+      "assets/new-panel-06.webp",              // SIGNAL ARCHIVE #002 — the frequency file
+      "assets/new-panel-07.webp",              // OSIRIS.EXE terminal room
+      "assets/new-panel-02.webp",              // and the truth wants out
+      "assets/new-panel-03.webp",              // signal grid, glowing eyes
       "assets/71-basement-carrier.webp",
       "assets/110-city-awake.webp",
+      "assets/new-panel-08.webp",              // the city sees / the city remembers
       "assets/126-surveillance-city.webp",
+      "assets/new-panel-15.webp",              // static TV — Black Sun ghost
       "assets/142-signal-returns.webp",
       "assets/77-night-house.webp",
+      // ---- BLOODLINE / SPLIT ------------------------------------------
       "assets/31-bloodline-dialogue.webp",      // someone else found the bloodline
       "assets/32-split-process-dialogue.webp",  // a split process you don't have access to
       "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
@@ -730,16 +796,23 @@
       "assets/07-judge-protocol.webp",          // the justice engine
       "assets/19-enough-is-enough.webp",       // enough is enough
       "assets/41-resist-exist-reclaim.webp",
+      "assets/new-panel-04.webp",              // RESIST. EXIST. RECLAIM. cover
       "assets/104-palante.webp",
       "assets/18-diskdarian-blackbook.webp",   // the youth are searching
       "assets/21-ser-boricua.webp",            // ser boricua es un honor
-      "assets/153-osiris-graffiti.jpeg",
+      // ---- YOUNG LORDS / THE SPLIT ARCHIVE ----------------------------
+      "assets/new-panel-25.webp",              // THE SPLIT ARCHIVE vol 01 — cover
+      "assets/153-osiris-graffiti.webp",
       "assets/50-young-lords.webp",
+      "assets/new-panel-30.webp",              // Split Archive — Young Lords Party
       "assets/113-split-files.webp",
       "assets/117-signal-archive-002.webp",
       "assets/138-ledger.webp",
       "assets/54-split-archive-young-lords.webp",
+      "assets/new-panel-27.webp",              // Split Archive — basement page
+      "assets/new-panel-28.webp",              // POWER IS MEMORY
       "assets/74-truth-or-version.webp",
+      "assets/new-panel-32.webp",              // the truth, or the version they left you
       "assets/101-jordyn-westside.webp",
       "assets/105-world-not-understand.webp",
       "assets/140-anomaly-standdown.webp",
@@ -750,20 +823,26 @@
       "assets/75-diskdarian-hiphop.webp",
       "assets/42-diskdarian-memory.webp",
       "assets/69-split-archive-v1.webp",
+      "assets/new-panel-29.webp",              // OSIRIS on the screen
       "assets/85-split-transmission.webp",
       "assets/93-split-archive-cover2.webp",
+      // ---- THE MASKS --------------------------------------------------
       "assets/06-enmascarado.webp",             // we learned to unthread the grid
       "assets/24-cheating-mask.webp",          // "that's cheating, you know?"
       "assets/11-enmascarado-unit.webp",        // enmascarado unit file
       "assets/26-vejigante-permiso.webp",      // el vejigante no pide permiso
       "assets/39-osiris-spec.webp",
+      "assets/new-panel-18.webp",              // OSIRIS — ancient digital entity spec
       "assets/106-sigil-legend.webp",
       "assets/66-osiris-the-code.webp",
       "assets/127-child-split-protocol.webp",
       "assets/52-system-schematic.webp",
       "assets/68-split-protocol-cover.webp",
+      // ---- DUAT / OSIRIS LORE -----------------------------------------
       "assets/16-duat-vessel.webp",             // keeper of the Duat / you were a vessel
       "assets/109-osiris-face.webp",
+      "assets/new-panel-38.webp",              // OSIRIS.exe — divine protection
+      "assets/new-panel-39.webp",              // OSIRIS.exe — split protocol cover
       "assets/129-birth-of-osiris.webp",
       "assets/53-four-pages-throne.webp",
       "assets/58-throne-signal-detected.webp",
@@ -777,22 +856,33 @@
       "assets/145-price-unspoken.webp",
       "assets/100-diskdarian-04.webp",
       "assets/116-archive-remembers.webp",
+      // ---- THE MERGE (climax) -----------------------------------------
       "assets/10-mask-signal.webp",             // the mask is the signal
+      "assets/new-panel-31.webp",              // MEMORY TRANSFER 91% — all of it
       "assets/08-merge.webp",                   // identity merge (climax)
       "assets/63-merge-override.webp",
+      "assets/new-panel-33.webp",              // I AM DISKDARIAN — the split is mine
       "assets/67-breaking-evolving.webp",
       "assets/87-i-am-still-here.webp",
+      "assets/new-panel-34.webp",              // split complete — end of volume 01
+      // ---- SECOND SIGNAL (twist) --------------------------------------
       "assets/20-second-signal.webp",          // you thought it started with Frank (twist)
       "assets/43-lincoln-park-arrival.webp",
+      "assets/new-panel-05.webp",              // desde 1898 la invasión continúa
       "assets/62-guanica-1898.webp",
       "assets/112-faln-1898.webp",
+      "assets/new-panel-01.webp",              // FALN / Fraunces Tavern 1975
       "assets/132-thing-from-trench.webp",
       "assets/49-split-archive-cover.webp",
+      // ---- ARCHIVE RISES (coda) ---------------------------------------
       "assets/15-body-changes.webp",            // the body changes, the signal remains
       "assets/09-archive-rises.webp",           // we are the archive
+      "assets/new-panel-35.webp",              // THE ARCHIVE IS US
       "assets/64-archive-future.webp",
       "assets/83-split-archive-89.webp",
       "assets/88-uprising-protocol.webp",
+      "assets/new-panel-36.webp",              // WE REMEMBER. WE RESIST. WE RISE. — vol 002
+      "assets/new-panel-37.webp",              // we are the archive / the archive is alive
       "assets/17-archive-never-died.webp",      // the archive never died, it remembered (coda)
       "assets/47-corrupted-file-cover.webp",
       "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
