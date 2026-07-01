@@ -1,949 +1,260 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OSIRIS.EXE // Pale Horse Motion Comic</title>
-  <style>
-    :root {
-      --green: #41ff7a;
-      --green-dim: #1f9f55;
-      --amber: #d99b45;
-      --paper: #d7b574;
-      --red: #ff3b30;
-      --black: #020403;
-      --panel: #070b09;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OSIRIS.EXE // ARCHIVE 01</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;900&family=Share+Tech+Mono&display=swap');
 
-    * { box-sizing: border-box; }
+  :root{
+    --green:#8fdc6a; --green-dim:#3c6a2a;
+    --red:#d1402f;   --red-dim:#5a1712;
+    --gold:#e8c874;
+    --bg:#050403;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ background:var(--bg); overflow-x:hidden; }
+  body{
+    font-family:'Share Tech Mono',monospace;
+    color:var(--green);
+    -webkit-tap-highlight-color:transparent;
+  }
 
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-      color: var(--green);
-      font-family: "Courier New", ui-monospace, monospace;
-    }
+  /* ---------- scroll progress bar ---------- */
+  .progress{
+    position:fixed; top:0; left:0; height:2px; z-index:60;
+    background:var(--green); width:0%;
+    box-shadow:0 0 10px var(--green);
+    transition:width .15s linear, background .8s ease, box-shadow .8s ease;
+  }
+  .progress.red{ background:var(--red); box-shadow:0 0 10px var(--red); }
 
-    button {
-      font: inherit;
-      color: inherit;
-      background: rgba(2, 8, 5, .82);
-      border: 1px solid rgba(65, 255, 122, .55);
-      cursor: pointer;
-    }
+  /* ---------- intro ---------- */
+  .intro{
+    height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    gap:18px; padding:24px;
+  }
+  .intro h1{
+    font-family:'Cinzel',serif; font-weight:900;
+    font-size:clamp(38px,13vw,110px); color:#fff; line-height:.9;
+    text-shadow:0 0 30px rgba(255,224,150,.5), 0 0 60px rgba(232,200,116,.3);
+  }
+  .intro h1 .ext{ color:var(--gold); }
+  .intro .sub{ color:var(--gold); letter-spacing:.4em; font-size:clamp(10px,3vw,15px); }
+  .intro .tag{ color:var(--green); letter-spacing:.28em; font-size:clamp(9px,2.6vw,12px); opacity:.7; max-width:34ch; line-height:1.8; }
+  .intro .scrollcue{
+    margin-top:20px; font-size:11px; letter-spacing:.3em; opacity:.6;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.25} 50%{opacity:.8} }
 
-    button:hover,
-    button:focus-visible {
-      border-color: var(--amber);
-      color: var(--amber);
-      outline: none;
-    }
+  /* ---------- panels ---------- */
+  .stage{ width:100%; }
+  .panel{
+    position:relative; width:100%;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    background:#000;
+  }
+  .panel .frame{
+    position:relative;
+    width:100%; max-width:760px;
+    aspect-ratio:1024/1536;
+    overflow:hidden;
+  }
+  .panel img{
+    position:absolute; top:50%; left:50%;
+    width:100%; height:100%;              /* full page — no edge crop */
+    object-fit:contain;
+    transform:translate(-50%,-50%) scale(1);
+    will-change:transform;
+    filter:brightness(.62) saturate(.9);
+    transition:filter 1.2s ease;
+  }
+  .panel.active img{ filter:brightness(1) saturate(1.02); }
 
-    #app {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(32, 128, 72, .18), transparent 32%),
-        linear-gradient(180deg, #030503, #000 52%, #050000);
-      isolation: isolate;
-      animation: powerOn 1s ease-in-out forwards;
-    }
+  /* Ken Burns targets via pan classes (JS sets --px/--py) */
+  .panel img{
+    transform:translate(calc(-50% + var(--px,0px)), calc(-50% + var(--py,0px))) scale(var(--sc,1));
+    transition:transform .2s linear;
+  }
 
-    #app::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 20;
-      background:
-        repeating-linear-gradient(to bottom, rgba(255,255,255,.06) 0, rgba(255,255,255,.06) 1px, transparent 1px, transparent 4px),
-        radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,.82) 100%);
-      mix-blend-mode: overlay;
-      opacity: .75;
-    }
+  /* ---------- CRT scanline + glow overlays ---------- */
+  .panel .scan{
+    position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.18) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply; opacity:.55;
+  }
+  .panel .glow{
+    position:absolute; inset:0; z-index:4; pointer-events:none;
+    opacity:0; transition:opacity 1.2s ease, box-shadow 1.2s ease;
+  }
+  .panel.active .glow{ opacity:1; }
+  .panel[data-signal="green"] .glow,
+  .panel[data-signal="green-red"] .glow{
+    box-shadow:inset 0 0 120px 20px rgba(143,220,106,.22);
+  }
+  .panel[data-signal="red"] .glow{
+    box-shadow:inset 0 0 140px 30px rgba(209,64,47,.30);
+  }
+  .panel[data-signal="neutral"] .glow{
+    box-shadow:inset 0 0 100px 20px rgba(232,200,116,.12);
+  }
+  /* vignette always */
+  .panel .vig{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    box-shadow:inset 0 0 160px 40px rgba(0,0,0,.7);
+  }
 
-    #app::after {
-      content: "";
-      position: absolute;
-      inset: -30%;
-      z-index: 21;
-      pointer-events: none;
-      opacity: .13;
-      background-image:
-        linear-gradient(115deg, transparent 0 47%, rgba(65,255,122,.14) 48% 50%, transparent 51% 100%),
-        repeating-radial-gradient(circle at 35% 45%, rgba(255,255,255,.25) 0 1px, transparent 1px 5px);
-      animation: noise 1.7s steps(2) infinite;
-    }
+  /* caption tab */
+  .panel .cap{
+    position:absolute; z-index:6; left:50%; bottom:5%;
+    transform:translateX(-50%) translateY(14px);
+    opacity:0; transition:opacity .8s ease, transform .8s ease;
+    font-size:clamp(11px,2.6vw,15px); letter-spacing:.16em;
+    color:var(--green); background:rgba(5,8,4,.82);
+    border:1px solid var(--green-dim); padding:8px 16px;
+    text-shadow:0 0 8px rgba(143,220,106,.4); white-space:nowrap;
+    max-width:90%;
+  }
+  .panel[data-signal="red"] .cap{
+    color:var(--red); border-color:var(--red-dim);
+    text-shadow:0 0 8px rgba(209,64,47,.5);
+  }
+  .panel.active .cap{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-    .scene {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(1.02);
-      transition: opacity .5s ease, transform .5s ease;
-      z-index: 1;
-    }
+  /* finale flourish */
+  .panel.finale .glow{ animation:redpulse 3.5s ease-in-out infinite; }
+  @keyframes redpulse{
+    0%,100%{ box-shadow:inset 0 0 140px 30px rgba(209,64,47,.30); }
+    50%    { box-shadow:inset 0 0 180px 50px rgba(209,64,47,.5); }
+  }
 
-    .scene.active {
-      opacity: 1;
-      pointer-events: auto;
-      transform: scale(1);
-      z-index: 2;
-    }
+  /* outro */
+  .outro{
+    height:70vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:16px;
+    color:var(--red);
+  }
+  .outro .tbc{ font-family:'Cinzel',serif; font-size:clamp(20px,6vw,42px); letter-spacing:.1em; }
+  .outro .next{ letter-spacing:.3em; font-size:12px; opacity:.7; }
+  .outro .credit{ margin-top:24px; font-size:11px; color:#8f7d54; letter-spacing:.24em; line-height:2; }
 
-    .frame {
-      position: relative;
-      width: min(92vw, calc(92vh * var(--ratio)));
-      height: min(92vh, calc(92vw / var(--ratio)));
-      background: var(--panel);
-      overflow: hidden;
-      border: 1px solid rgba(217,155,69,.42);
-      box-shadow:
-        0 0 0 2px rgba(0,0,0,.9),
-        0 0 34px rgba(65,255,122,.18),
-        0 20px 80px rgba(0,0,0,.9);
-    }
-
-    .scene.red .frame {
-      border-color: rgba(255,59,48,.58);
-      box-shadow:
-        0 0 0 2px rgba(0,0,0,.95),
-        0 0 36px rgba(255,59,48,.28),
-        0 20px 80px rgba(0,0,0,.92);
-    }
-
-    .art {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #030303;
-      transform: translate3d(var(--pan-from, 0%), 0, 0) scale(var(--pan-scale, 1.04));
-      animation: pan var(--duration, 8s) ease-in-out infinite alternate;
-      animation-play-state: paused;
-    }
-
-    /* Only the active panel gets filter + animation — frees GPU memory on adjacent scenes. */
-    .scene.active .art {
-      filter: contrast(1.07) saturate(.95) brightness(.9);
-      animation-play-state: running;
-    }
-
-    .light {
-      position: absolute;
-      width: 28%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      left: var(--x, 50%);
-      top: var(--y, 50%);
-      transform: translate(-50%, -50%);
-      background: radial-gradient(circle, rgba(77,255,129,.52), rgba(77,255,129,.16) 26%, transparent 70%);
-      mix-blend-mode: screen;
-      opacity: .72;
-      animation: pulse 2.3s ease-in-out infinite;
-    }
-
-    .scene.red .light {
-      background: radial-gradient(circle, rgba(255,59,48,.58), rgba(255,128,42,.18) 28%, transparent 72%);
-    }
-
-    .hud {
-      position: absolute;
-      left: clamp(12px, 2vw, 24px);
-      top: clamp(12px, 2vw, 24px);
-      max-width: min(430px, 56%);
-      padding: 10px 12px;
-      color: var(--green);
-      background: rgba(0, 10, 5, .66);
-      border: 1px solid rgba(65,255,122,.45);
-      text-transform: uppercase;
-      letter-spacing: 0;
-      font-size: clamp(11px, 1.55vw, 18px);
-      line-height: 1.3;
-      text-shadow: 0 0 12px rgba(65,255,122,.6);
-    }
-
-    .scene.red .hud {
-      color: var(--red);
-      border-color: rgba(255,59,48,.55);
-      text-shadow: 0 0 14px rgba(255,59,48,.68);
-    }
-
-    .caption {
-      position: absolute;
-      left: clamp(14px, 3vw, 44px);
-      right: clamp(14px, 3vw, 44px);
-      bottom: clamp(72px, 11vh, 118px);
-      display: grid;
-      gap: 8px;
-      max-width: 780px;
-      padding: clamp(12px, 2vw, 20px);
-      background: rgba(3, 9, 5, .82);
-      border: 1px solid rgba(65,255,122,.48);
-      box-shadow: 0 0 24px rgba(0,0,0,.7);
-    }
-
-    .scene.red .caption {
-      border-color: rgba(255,59,48,.62);
-      background: rgba(16, 3, 3, .84);
-    }
-
-    .caption strong {
-      color: var(--amber);
-      font-size: clamp(13px, 1.6vw, 20px);
-      line-height: 1.15;
-      text-transform: uppercase;
-    }
-
-    .caption span {
-      color: #c9ffd5;
-      font-size: clamp(12px, 1.6vw, 18px);
-      line-height: 1.4;
-    }
-
-    .caption em {
-      color: var(--paper);
-      font-style: normal;
-    }
-
-    .terminal {
-      position: absolute;
-      right: clamp(12px, 2vw, 24px);
-      top: clamp(12px, 2vw, 24px);
-      width: min(330px, 36%);
-      padding: 10px 12px;
-      color: var(--red);
-      background: rgba(15, 0, 0, .76);
-      border: 1px solid rgba(255,59,48,.56);
-      font-size: clamp(10px, 1.25vw, 16px);
-      line-height: 1.35;
-      text-transform: uppercase;
-      text-shadow: 0 0 13px rgba(255,59,48,.72);
-    }
-
-    .terminal.green {
-      color: var(--green);
-      background: rgba(0, 12, 6, .72);
-      border-color: rgba(65,255,122,.45);
-      text-shadow: 0 0 13px rgba(65,255,122,.65);
-    }
-
-    .controls {
-      position: absolute;
-      z-index: 30;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      background: rgba(0,0,0,.72);
-      border: 1px solid rgba(65,255,122,.28);
-    }
-
-    .controls button {
-      width: 42px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-    }
-
-    .counter {
-      min-width: 86px;
-      text-align: center;
-      color: var(--paper);
-      font-size: 13px;
-    }
-
-    #views {
-      position: absolute;
-      z-index: 40;
-      top: 10px;
-      right: 10px;
-      padding: 4px 8px;
-      color: var(--green);
-      background: rgba(0, 10, 5, .6);
-      border: 1px solid rgba(65,255,122,.4);
-      font-size: 12px;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(65,255,122,.6);
-      pointer-events: none;
-      user-select: none;
-    }
-
-
-    .progress {
-      position: absolute;
-      z-index: 29;
-      left: 0;
-      bottom: 0;
-      height: 3px;
-      width: 100%;
-      background: rgba(255,255,255,.08);
-    }
-
-    .progress span {
-      display: block;
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
-    }
-
-    /* Slow rolling scanline band + brightness flicker — sits above the
-       static scanlines (::before) and noise (::after) for a live CRT feel. */
-    .crt {
-      position: absolute;
-      inset: 0;
-      z-index: 22;
-      pointer-events: none;
-      mix-blend-mode: screen;
-      background: linear-gradient(
-        to bottom,
-        transparent 0%,
-        rgba(65,255,122,.05) 47%,
-        rgba(65,255,122,.13) 50%,
-        rgba(65,255,122,.05) 53%,
-        transparent 100%
-      );
-      background-size: 100% 240%;
-      opacity: .5;
-      animation: crtRoll 7.5s linear infinite, crtFlicker 5.5s steps(40) infinite;
-    }
-
-    .glitch {
-      position: absolute;
-      inset: 0;
-      z-index: 25;
-      pointer-events: none;
-      opacity: 0;
-      mix-blend-mode: screen;
-      background:
-        linear-gradient(90deg, transparent 0 12%, rgba(255,59,48,.35) 12% 13%, transparent 13% 54%, rgba(65,255,122,.28) 54% 55%, transparent 55%),
-        repeating-linear-gradient(to bottom, transparent 0 18px, rgba(255,255,255,.08) 18px 20px);
-    }
-
-    .glitch.hit {
-      animation: glitch .42s steps(2);
-    }
-
-    .title-card {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 7vw;
-      text-align: center;
-      background: radial-gradient(circle, rgba(65,255,122,.16), transparent 38%), #000;
-    }
-
-    .title-card h1 {
-      margin: 0;
-      color: #e7ffe9;
-      font-size: clamp(36px, 8vw, 118px);
-      line-height: .88;
-      text-shadow: 0 0 28px rgba(65,255,122,.45);
-    }
-
-    .title-card p {
-      max-width: 800px;
-      margin: 22px auto 0;
-      color: var(--paper);
-      font-size: clamp(14px, 2vw, 24px);
-      line-height: 1.35;
-    }
-
-    @media (max-width: 760px) {
-      .frame {
-        width: 100vw;
-        height: 100vh;
-        border: 0;
-      }
-
-      .hud,
-      .terminal {
-        max-width: calc(100vw - 24px);
-        width: auto;
-        font-size: 11px;
-      }
-
-      .terminal {
-        left: 12px;
-        right: auto;
-        top: auto;
-        bottom: 134px;
-      }
-
-      .caption {
-        left: 12px;
-        right: 12px;
-        bottom: 70px;
-        padding: 12px;
-      }
-    }
-
-    @keyframes pan {
-      from { transform: translate3d(var(--pan-from, -2%), 0, 0) scale(var(--pan-scale, 1.04)); }
-      to   { transform: translate3d(var(--pan-to,    2%), 0, 0) scale(var(--pan-scale, 1.04)); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: .45; transform: translate(-50%, -50%) scale(.9); }
-      50% { opacity: .92; transform: translate(-50%, -50%) scale(1.18); }
-    }
-
-    @keyframes glitch {
-      0% { opacity: 0; transform: translate(0, 0); }
-      18% { opacity: .9; transform: translate(-10px, 5px); }
-      36% { opacity: .35; transform: translate(8px, -4px); }
-      60% { opacity: .8; transform: translate(-4px, 2px); }
-      100% { opacity: 0; transform: translate(0, 0); }
-    }
-
-    @keyframes crtRoll {
-      from { background-position: 0 -120%; }
-      to { background-position: 0 120%; }
-    }
-
-    @keyframes crtFlicker {
-      0%, 100% { opacity: .42; }
-      50% { opacity: .55; }
-      92% { opacity: .36; }
-    }
-
-    @keyframes noise {
-      0% { transform: translate3d(-2%, -1%, 0); }
-      100% { transform: translate3d(2%, 1%, 0); }
-    }
-
-    @keyframes powerOn {
-      0% { opacity: 0; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.1); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    /* Respect users who ask the OS to minimize motion: hold each panel
-       still, keep the look, drop the drift / flicker / noise / glitch. */
-    @media (prefers-reduced-motion: reduce) {
-      #app { animation: none; }
-      #app::after,
-      .crt,
-      .light { animation: none; }
-      .art {
-        animation: none;
-        transform: scale(1.04);
-      }
-      .scene { transition: opacity .3s ease; transform: none; }
-      .glitch.hit { animation: none; }
-    }
-  </style>
+  @media (prefers-reduced-motion: reduce){
+    .panel img{ transition:none !important; }
+    .intro .scrollcue{ animation:none; }
+  }
+</style>
 </head>
 <body>
-  <main id="app" aria-label="OSIRIS.EXE Pale Horse Protocol motion comic">
-    <div class="crt" aria-hidden="true"></div>
-    <section class="scene active" data-duration="5200">
-      <div class="title-card">
-        <div>
-          <h1>OSIRIS.EXE</h1>
-          <p>PALE HORSE PROTOCOL // A motion comic proof assembled from the Underlayer archive.</p>
-        </div>
-      </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="stage" id="stage">
+    <!-- intro -->
+    <section class="intro">
+      <div class="sub" id="i-sub">ARCHIVE 01</div>
+      <h1>OSIRIS<span class="ext">.EXE</span></h1>
+      <div class="tag" id="i-tag">MEMORY IS THE OLDEST FORM OF RESISTANCE</div>
+      <div class="scrollcue">SCROLL TO DESCEND ▽</div>
     </section>
-  </main>
-
-  <div class="controls" aria-label="Playback controls">
-    <button id="prev" type="button" aria-label="Previous panel">‹</button>
-    <button id="play" type="button" aria-label="Pause">Ⅱ</button>
-    <div id="counter" class="counter">01 / 11</div>
-    <button id="next" type="button" aria-label="Next panel">›</button>
+    <!-- panels injected here -->
   </div>
-  <div class="progress" aria-hidden="true"><span id="bar"></span></div>
-  <div id="glitch" class="glitch" aria-hidden="true"></div>
-  <div id="views" aria-label="View count" hidden>◉ <span id="views-n">—</span></div>
 
+  <script src="config.js"></script>
   <script>
-    const beats = [
-      {
-        src: "assets/03-school.webp",
-        ratio: 1536 / 1024,
-        duration: 7000,
-        hud: "HUMBOLDT PARK // ST. SYLVESTER\\nYEAR: 1987",
-        title: "The Week Is Not Real",
-        text: "Before OSIRIS was a system, he was a boy learning that time can be a cage.",
-        terminal: "SIGNAL TRACE: CHILDHOOD NODE",
-        mode: "green",
-        light: ["50%", "30%"],
-        motion: ["1.08", "0", "0", "1.18", "0", "-1.5%"]
-      },
-      {
-        src: "assets/04-cage.webp",
-        ratio: 1536 / 1024,
-        duration: 6800,
-        hud: "CITY MEMORY // DIVISION STREET",
-        title: "Some Inherit Silence",
-        text: "The city does not wait. Nobody does. Not even the sun.",
-        terminal: "STATUS: WATCHED\\nAWARENESS LEVEL: 0.03%",
-        mode: "green",
-        light: ["56%", "50%"],
-        motion: ["1.05", "-1%", "0", "1.16", "1%", "0"]
-      },
-      {
-        src: "assets/02-cooper-file.webp",
-        ratio: 1024 / 1536,
-        contain: true,
-        duration: 7600,
-        hud: "PAGE 2 // THE COOPER FILE",
-        title: "Analog Haunting A Digital World",
-        text: "<em>Behold a Pale Horse</em> materializes in data-space. The book was not the message. The message was the architecture.",
-        terminal: "PASSAGE NODES: ACTIVE\\nNETWORK PULSE: RISING",
-        mode: "red",
-        light: ["58%", "25%"],
-        motion: ["1.02", "0", "1%", "1.1", "0", "-2%"]
-      },
-      {
-        src: "assets/07-judge-protocol.webp",
-        ratio: 1024 / 1536,
-        contain: true,
-        duration: 7000,
-        hud: "NODE 05 // THE LAW",
-        title: "Justice Engine",
-        text: "The law does not seek truth. It seeks finality. Pale Horse calls it order.",
-        terminal: "PALE HORSE RESPONSE: ELEVATED\\nSTATUS: COMPROMISED",
-        mode: "red",
-        light: ["53%", "42%"],
-        motion: ["1.02", "0", "0", "1.12", "0", "1.5%"]
-      },
-      {
-        src: "assets/06-enmascarado.webp",
-        ratio: 1023 / 1537,
-        contain: true,
-        duration: 7000,
-        hud: "REZ: EL ENMASCARADO\\nGRID: NORTH AVE VIADUCT",
-        title: "We Learned To Unthread It",
-        text: "They built the grid to watch us. The mask learned to turn surveillance into a route out.",
-        terminal: "GRILLA: CANCELADA\\nSENSOR EYE: CRACKED",
-        mode: "green",
-        light: ["50%", "48%"],
-        motion: ["1.03", "0", "0", "1.13", "0", "-1%"]
-      },
-      {
-        src: "assets/10-mask-signal.webp",
-        ratio: 1024 / 1536,
-        contain: true,
-        duration: 6700,
-        hud: "CACO: LINKED // SIGNAL CONTAINED",
-        title: "The Mask Is The Signal",
-        text: "No busco el poder. Libero lo que ya es nuestro.",
-        terminal: "DISPATCH LEVEL: COMPROMISED\\nBLIND ZONE: ESTABLISHED",
-        mode: "green",
-        light: ["50%", "56%"],
-        motion: ["1.02", "0", "0", "1.12", "0", "1%"]
-      },
-      {
-        src: "assets/08-merge.webp",
-        ratio: 1086 / 1448,
-        contain: true,
-        duration: 7600,
-        hud: "OSIRIS.EXE TERMINAL v1.7.3",
-        title: "Identity Merge",
-        text: "Cooper died for writing it down. Frank died for living it. Now the record refuses to burn.",
-        terminal: "SYSTEM OVERRIDE\\nSOUL ANCHOR DETECTED\\nERROR // ERROR // ERROR",
-        mode: "red",
-        light: ["50%", "48%"],
-        motion: ["1.02", "0", "0", "1.14", "0", "-1.5%"]
-      },
-      {
-        src: "assets/09-archive-rises.webp",
-        ratio: 1023 / 1537,
-        contain: true,
-        duration: 7600,
-        hud: "THE SPLIT ARCHIVE // TRANSMISSION LIVE",
-        title: "We Are The Archive",
-        text: "Together we silence their power. We take back what was filed under forgetting.",
-        terminal: "ERASE: DENIED\\nCOMPLY: DENIED\\nOBEY: DENIED\\nDELETE: DENIED",
-        mode: "green",
-        light: ["48%", "36%"],
-        motion: ["1.02", "0", "0", "1.11", "0", "-1%"]
-      },
-      {
-        src: "assets/11-enmascarado-unit.webp",
-        ratio: 1122 / 1402,
-        contain: true,
-        duration: 7000,
-        mode: "green"
-        // Self-contained art: HUD/terminal/caption are baked into the image,
-        // so overlay fields are intentionally omitted.
-      },
-      // --- Self-contained panels (text baked into the art) -------------
-      { src: "assets/12-syrena-terminals.webp",   ratio: 1536 / 1024, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/13-ni-olvido.webp",           ratio: 1122 / 1402, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/14-desierto.webp",            ratio: 1023 / 1537, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/15-body-changes.webp",        ratio: 1024 / 1536, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/16-duat-vessel.webp",         ratio: 1024 / 1536, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/17-archive-never-died.webp",  ratio: 1122 / 1402, contain: true, duration: 7600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/18-diskdarian-blackbook.webp", ratio: 1024 / 1536, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/19-enough-is-enough.webp",   ratio: 1024 / 1536, contain: true, duration: 7000, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/20-second-signal.webp",      ratio: 1024 / 1536, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/21-ser-boricua.webp",        ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/23-signal-in-walls.webp",    ratio: 1122 / 1402, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/24-cheating-mask.webp",      ratio: 1448 / 1086, contain: true, duration: 6600, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/25-vieques-coldopen.webp",   ratio: 1536 / 1024, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/26-vejigante-permiso.webp",  ratio: 1536 / 1024, contain: true, duration: 7200, mode: "red",   motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/27-prologue-cover.webp",        ratio: 1122 / 1402, contain: true, duration: 7600, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/28-syrena-profile.webp",        ratio: 1023 / 1537, contain: true, duration: 7400, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/31-bloodline-dialogue.webp",    ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/32-split-process-dialogue.webp", ratio: 1536 / 1024, contain: true, duration: 7000, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/33-justicia-memoria.webp",     ratio: 1023 / 1537, contain: true, duration: 7200, mode: "green", motion: ["1.01", "0", "0", "1.05", "0", "0"] },
-      { src: "assets/39-osiris-spec.webp", ratio: 1195 / 1316, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/40-shattered-reflection.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/41-resist-exist-reclaim.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/42-diskdarian-memory.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/43-lincoln-park-arrival.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/44-dead-phone-glow.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/45-devices-dead.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/47-corrupted-file-cover.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/48-artist-desk.webp", ratio: 1295 / 1214, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/49-split-archive-cover.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/50-young-lords.webp", ratio: 1025 / 1535, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/51-library-unwritten.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/52-system-schematic.webp", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/53-four-pages-throne.webp", ratio: 1183 / 1329, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/54-split-archive-young-lords.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/55-prologue-p7.webp", ratio: 1024 / 1535, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/56-intro-terminal.webp", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "green",
-        terminal: "EN // ARCHIVE TRANSLATION\\n> THIS IS NOT A STORY OF SUPERHEROES\\n> THIS IS NOT A STORY OF VILLAINS\\n> THIS IS A STORY OF WHAT THEY DID\\n> AND WHAT SURVIVED\\n> OSIRIS.EXE\\n> ARCHIVE OPEN\\n> BEGIN" },
-      { src: "assets/57-classroom-1989.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/58-throne-signal-detected.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/59-duat-protocol.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/62-guanica-1898.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/63-merge-override.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/64-archive-future.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/65-static-kids.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/66-osiris-the-code.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/67-breaking-evolving.webp", ratio: 864 / 1821, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/68-split-protocol-cover.webp", ratio: 1054 / 1492, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/69-split-archive-v1.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/70-week-isnt-real.webp", ratio: 1003 / 1568, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/71-basement-carrier.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/72-diskdarian-nitano.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/73-drawings-talking.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/74-truth-or-version.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/75-diskdarian-hiphop.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/76-black-sun-journal.webp", ratio: 1312 / 1199, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/77-night-house.webp", ratio: 1402 / 1122, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/82-black-sun-mural.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/83-split-archive-89.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/84-i-didnt-draw.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/85-split-transmission.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/86-osiris-issue1.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/87-i-am-still-here.webp", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/88-uprising-protocol.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/89-dont-remember-drawing.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/90-dead-no-battery.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/93-split-archive-cover2.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/94-painted-reckoning.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/96-signal-sigil.webp", ratio: 1254 / 1254, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/97-dad-call-failed.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/100-diskdarian-04.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/101-jordyn-westside.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/104-palante.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/105-world-not-understand.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/106-sigil-legend.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/109-osiris-face.webp", ratio: 1086 / 1448, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/110-city-awake.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/111-the-map.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/112-faln-1898.webp", ratio: 1122 / 1402, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/113-split-files.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/114-prologue-p6.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/115-hello-phone.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/116-archive-remembers.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/117-signal-archive-002.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/123-hollowed-code.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/126-surveillance-city.webp", ratio: 1149 / 1369, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/127-child-split-protocol.webp", ratio: 1154 / 1363, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/129-birth-of-osiris.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/132-thing-from-trench.webp", ratio: 1672 / 941, contain: true, duration: 6500, mode: "red" },
-      { src: "assets/134-father-archived.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/138-ledger.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/140-anomaly-standdown.webp", ratio: 1023 / 1537, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/142-signal-returns.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/145-price-unspoken.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/150-walks-to-front.webp", ratio: 1024 / 1536, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/153-osiris-graffiti.jpeg", ratio: 1277 / 1025, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/155-prologue-p1.jpeg", ratio: 1320 / 1947, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/161-father-origin-node.jpeg", ratio: 1320 / 2141, contain: true, duration: 6500, mode: "green" },
-      { src: "assets/163-giger-osiris-throne.webp", ratio: 1536 / 1024, contain: true, duration: 6500, mode: "red" }
-    ];
+    const D = window.OSIRIS_ISSUE;
+    const stage = document.getElementById('stage');
+    const prog = document.getElementById('progress');
+    document.getElementById('i-sub').textContent = D.issue;
+    document.getElementById('i-tag').textContent = D.tagline;
 
-    // ---- PLAY ORDER -------------------------------------------------------
-    // Sequence of the comic. Rearrange these lines to re-cut the story;
-    // every src in `beats` above must appear here exactly once.
-    const ORDER = [
-      "assets/56-intro-terminal.webp",
-      "assets/27-prologue-cover.webp",          // OSIRIS.EXE prologue cover
-      "assets/155-prologue-p1.jpeg",
-      "assets/03-school.webp",                  // the boy, 1987
-      "assets/57-classroom-1989.webp",
-      "assets/70-week-isnt-real.webp",
-      "assets/150-walks-to-front.webp",
-      "assets/114-prologue-p6.webp",
-      "assets/55-prologue-p7.webp",
-      "assets/04-cage.webp",                    // some inherit silence
-      "assets/23-signal-in-walls.webp",        // the signal was already inside the walls
-      "assets/96-signal-sigil.webp",
-      "assets/97-dad-call-failed.webp",
-      "assets/115-hello-phone.webp",
-      "assets/134-father-archived.webp",
-      "assets/161-father-origin-node.jpeg",
-      "assets/44-dead-phone-glow.webp",
-      "assets/86-osiris-issue1.webp",
-      "assets/90-dead-no-battery.webp",
-      "assets/45-devices-dead.webp",
-      "assets/28-syrena-profile.webp",          // Syrena Sanchez — memory keeper
-      "assets/48-artist-desk.webp",
-      "assets/73-drawings-talking.webp",
-      "assets/76-black-sun-journal.webp",
-      "assets/84-i-didnt-draw.webp",
-      "assets/89-dont-remember-drawing.webp",
-      "assets/12-syrena-terminals.webp",        // they used the blueprint to make the game
-      "assets/71-basement-carrier.webp",
-      "assets/110-city-awake.webp",
-      "assets/126-surveillance-city.webp",
-      "assets/142-signal-returns.webp",
-      "assets/77-night-house.webp",
-      "assets/31-bloodline-dialogue.webp",      // someone else found the bloodline
-      "assets/32-split-process-dialogue.webp",  // a split process you don't have access to
-      "assets/33-justicia-memoria.webp",       // justicia sin memoria es control
-      "assets/02-cooper-file.webp",             // Behold a Pale Horse / the Cooper file
-      "assets/13-ni-olvido.webp",               // ni olvido ni perdon
-      "assets/07-judge-protocol.webp",          // the justice engine
-      "assets/19-enough-is-enough.webp",       // enough is enough
-      "assets/41-resist-exist-reclaim.webp",
-      "assets/104-palante.webp",
-      "assets/18-diskdarian-blackbook.webp",   // the youth are searching
-      "assets/21-ser-boricua.webp",            // ser boricua es un honor
-      "assets/153-osiris-graffiti.jpeg",
-      "assets/50-young-lords.webp",
-      "assets/113-split-files.webp",
-      "assets/117-signal-archive-002.webp",
-      "assets/138-ledger.webp",
-      "assets/54-split-archive-young-lords.webp",
-      "assets/74-truth-or-version.webp",
-      "assets/101-jordyn-westside.webp",
-      "assets/105-world-not-understand.webp",
-      "assets/140-anomaly-standdown.webp",
-      "assets/111-the-map.webp",
-      "assets/65-static-kids.webp",
-      "assets/82-black-sun-mural.webp",
-      "assets/72-diskdarian-nitano.webp",
-      "assets/75-diskdarian-hiphop.webp",
-      "assets/42-diskdarian-memory.webp",
-      "assets/69-split-archive-v1.webp",
-      "assets/85-split-transmission.webp",
-      "assets/93-split-archive-cover2.webp",
-      "assets/06-enmascarado.webp",             // we learned to unthread the grid
-      "assets/24-cheating-mask.webp",          // "that's cheating, you know?"
-      "assets/11-enmascarado-unit.webp",        // enmascarado unit file
-      "assets/26-vejigante-permiso.webp",      // el vejigante no pide permiso
-      "assets/39-osiris-spec.webp",
-      "assets/106-sigil-legend.webp",
-      "assets/66-osiris-the-code.webp",
-      "assets/127-child-split-protocol.webp",
-      "assets/52-system-schematic.webp",
-      "assets/68-split-protocol-cover.webp",
-      "assets/16-duat-vessel.webp",             // keeper of the Duat / you were a vessel
-      "assets/109-osiris-face.webp",
-      "assets/129-birth-of-osiris.webp",
-      "assets/53-four-pages-throne.webp",
-      "assets/58-throne-signal-detected.webp",
-      "assets/163-giger-osiris-throne.webp",
-      "assets/59-duat-protocol.webp",
-      "assets/14-desierto.webp",                // el desierto no perdona
-      "assets/40-shattered-reflection.webp",
-      "assets/51-library-unwritten.webp",
-      "assets/94-painted-reckoning.webp",
-      "assets/123-hollowed-code.webp",
-      "assets/145-price-unspoken.webp",
-      "assets/100-diskdarian-04.webp",
-      "assets/116-archive-remembers.webp",
-      "assets/10-mask-signal.webp",             // the mask is the signal
-      "assets/08-merge.webp",                   // identity merge (climax)
-      "assets/63-merge-override.webp",
-      "assets/67-breaking-evolving.webp",
-      "assets/87-i-am-still-here.webp",
-      "assets/20-second-signal.webp",          // you thought it started with Frank (twist)
-      "assets/43-lincoln-park-arrival.webp",
-      "assets/62-guanica-1898.webp",
-      "assets/112-faln-1898.webp",
-      "assets/132-thing-from-trench.webp",
-      "assets/49-split-archive-cover.webp",
-      "assets/15-body-changes.webp",            // the body changes, the signal remains
-      "assets/09-archive-rises.webp",           // we are the archive
-      "assets/64-archive-future.webp",
-      "assets/83-split-archive-89.webp",
-      "assets/88-uprising-protocol.webp",
-      "assets/17-archive-never-died.webp",      // the archive never died, it remembered (coda)
-      "assets/47-corrupted-file-cover.webp",
-      "assets/25-vieques-coldopen.webp",       // cold open: Vieques 1999 + title plate
-    ];
-    beats.sort((a, b) => ORDER.indexOf(a.src) - ORDER.indexOf(b.src));
+    const panMap = {
+      top:    {px:0,   py:'-6%'},
+      bottom: {px:0,   py:'6%'},
+      center: {px:0,   py:0},
+      left:   {px:'-6%',py:0},
+      right:  {px:'6%', py:0}
+    };
 
-    const app = document.getElementById("app");
-    const glitch = document.getElementById("glitch");
-    const counter = document.getElementById("counter");
-    const playButton = document.getElementById("play");
-    const bar = document.getElementById("bar");
-    const titleCard = document.querySelector("section.scene[data-duration]");
-    const titleDuration = Number(titleCard?.dataset.duration || 7000);
-    let current = -1;
-    let playing = true;
-    let timer = 0;
-    let started = performance.now();
-
-    function buildScene(beat, index) {
-      const scene = document.createElement("section");
-      scene.className = `scene ${beat.mode === "red" ? "red" : ""}`;
-      scene.dataset.duration = beat.duration;
-      scene.dataset.src = beat.src;
-      // Alternate pan direction per panel: even → left-to-right, odd → right-to-left
-      const panFrom = index % 2 === 0 ? "-2%" : "2%";
-      const panTo   = index % 2 === 0 ? "2%"  : "-2%";
-      scene.innerHTML = `
-        <div class="frame" style="--ratio:${beat.ratio}">
-          <img class="art" src="${beat.src}" alt="" decoding="async" style="--duration:${Math.max(beat.duration / 1000, 6)}s; --pan-from:${panFrom}; --pan-to:${panTo}">
-          ${beat.light ? `<div class="light" style="--x:${beat.light[0]}; --y:${beat.light[1]}"></div>` : ""}
-          ${beat.hud ? `<div class="hud">${beat.hud.replace(/\\n/g, "<br>")}</div>` : ""}
-          ${beat.terminal ? `<div class="terminal ${beat.mode === "green" ? "green" : ""}">${beat.terminal.replace(/\\n/g, "<br>")}</div>` : ""}
-          ${(beat.title || beat.text) ? `<div class="caption"><strong>${beat.title || ""}</strong><span>${beat.text || ""}</span></div>` : ""}
-        </div>
-      `;
-      return scene;
-    }
-
-    // Virtual window: only keep 3 scenes in the DOM at a time.
-    const mounted = new Map(); // index → DOM element
-
-    function mount(index) {
-      if (mounted.has(index)) return mounted.get(index);
-      const el = buildScene(beats[index], index);
-      app.appendChild(el);
-      mounted.set(index, el);
-      return el;
-    }
-
-    function unmount(index) {
-      const el = mounted.get(index);
-      if (el) { el.remove(); mounted.delete(index); }
-    }
-
-    function show(index, burst = true) {
-      const total = beats.length;
-      window.clearTimeout(timer);
-
-      // -1 means title card
-      if (index < 0) {
-        current = -1;
-        document.querySelectorAll(".scene").forEach(el => el.classList.remove("active"));
-        mounted.forEach(el => el.classList.remove("active"));
-        titleCard.classList.add("active");
-        counter.textContent = `00 / ${String(total).padStart(2, "0")}`;
-        started = performance.now();
-        bar.style.width = "0%";
-        queue();
-        return;
-      }
-
-      current = index % total;
-
-      // Evict scenes outside the ±1 window to free GPU memory (critical on iPad Safari).
-      for (const [i] of mounted) {
-        if (Math.abs(i - current) > 1 && !(i === 0 && current === total - 1) && !(i === total - 1 && current === 0)) {
-          unmount(i);
-        }
-      }
-
-      // Mount current + immediate neighbours only.
-      mount((current - 1 + total) % total);
-      mount(current);
-      mount((current + 1) % total);
-
-      document.querySelectorAll(".scene").forEach(el => el.classList.remove("active"));
-      mounted.forEach((el, i) => el.classList.toggle("active", i === current));
-
-      counter.textContent = `${String(current + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
-      const src = beats[current].src;
-      started = performance.now();
-      bar.style.width = "0%";
-      if (burst) {
-        glitch.classList.remove("hit");
-        void glitch.offsetWidth;
-        glitch.classList.add("hit");
-      }
-      queue();
-    }
-
-    function currentDuration() {
-      if (current === -1) return titleDuration;
-      return Number(beats[current]?.duration || 6500);
-    }
-
-    function queue() {
-      window.clearTimeout(timer);
-      if (!playing) return;
-      timer = window.setTimeout(() => show(current + 1), currentDuration());
-    }
-
-    function tick(now) {
-      if (playing) {
-        bar.style.width = `${Math.min(100, ((now - started) / currentDuration()) * 100)}%`;
-      }
-      requestAnimationFrame(tick);
-    }
-
-    document.getElementById("prev").addEventListener("click", () => show(current - 1));
-    document.getElementById("next").addEventListener("click", () => show(current + 1));
-    playButton.addEventListener("click", () => {
-      playing = !playing;
-      playButton.textContent = playing ? "Ⅱ" : "▶";
-      playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
-      started = performance.now();
-      queue();
+    // build panels
+    D.pages.forEach((p, i) => {
+      const sec = document.createElement('section');
+      sec.className = 'panel' + (p.finale ? ' finale' : '');
+      sec.dataset.signal = p.signal;
+      sec.dataset.index = i;
+      const src = D.assetDir + p.file + '.' + D.ext;
+      sec.innerHTML = `
+        <div class="frame">
+          <img src="${src}" alt="${p.label||''}" loading="lazy">
+          <div class="vig"></div>
+          <div class="scan"></div>
+          <div class="glow"></div>
+          ${p.label ? `<div class="cap">${p.label}</div>` : ''}
+        </div>`;
+      stage.appendChild(sec);
     });
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowLeft") show(current - 1);
-      if (event.key === "ArrowRight" || event.key === " ") show(current + 1);
-    });
+    // outro
+    const outro = document.createElement('section');
+    outro.className = 'outro';
+    outro.innerHTML = `
+      <div class="tbc">TO BE CONTINUED</div>
+      <div class="next">OSIRIS.EXE #2</div>
+      <div class="credit">DSB LABS &nbsp;◆&nbsp; DISK DARIÁN &nbsp;◆&nbsp; F.O. SANCHEZ<br>LA MEMORIA NO SE BORRA</div>`;
+    stage.appendChild(outro);
 
-    counter.textContent = `00 / ${String(beats.length).padStart(2, "0")}`;
-    queue();
-    requestAnimationFrame(tick);
+    const panels = [...document.querySelectorAll('.panel')];
 
-    // View counter — increments once per load via a free counter service.
-    // Fails silently (stays hidden) if the service is unreachable.
-    (function () {
-      const box = document.getElementById("views");
-      const n = document.getElementById("views-n");
-      fetch("https://abacus.jasoncameron.dev/hit/kingpiragua-osiris/views")
-        .then((r) => r.ok ? r.json() : Promise.reject())
-        .then((d) => {
-          if (typeof d.value !== "number") return;
-          n.textContent = d.value.toLocaleString();
-          box.hidden = false;
-        })
-        .catch(() => { /* counter offline — leave hidden */ });
-    })();
+    // scroll-driven Ken Burns + active state + signal HUD
+    let ticking = false;
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(()=>{
+        const vh = window.innerHeight;
+        let activeSignal = 'neutral';
+        panels.forEach(pan=>{
+          const r = pan.getBoundingClientRect();
+          const img = pan.querySelector('img');
+          // progress of this panel through viewport: 0 (entering) .. 1 (leaving)
+          const prog01 = 1 - (r.top + r.height/2) / (vh + r.height) ; // ~0..1
+          const clamped = Math.max(0, Math.min(1, prog01));
+          // Ken Burns — clip-safe: the full page is always visible.
+          // Scale peaks at 1.0 when centered (whole page fills the frame)
+          // and eases to .95 at the edges; the pan drift stays inside the
+          // small margin that sub-1 scale creates, so nothing is ever cropped.
+          const drift = (clamped - 0.5) * 2; // -1..1 (0 when centered)
+          const sc = 1 - Math.abs(drift) * 0.05; // 1.0 centered -> .95 at edges
+          const frame = pan.querySelector('.frame');
+          const fx = frame.clientWidth;
+          const fy = frame.clientHeight || fx * 1.5;
+          // 0.015 < half of the (1-sc) margin, so drift never reaches the edge
+          img.style.setProperty('--px', (drift * fx * 0.015).toFixed(1) + 'px');
+          img.style.setProperty('--py', (drift * fy * 0.015).toFixed(1) + 'px');
+          img.style.setProperty('--sc', sc.toFixed(3));
+          // active when roughly centered
+          const centered = r.top < vh*0.55 && r.bottom > vh*0.45;
+          pan.classList.toggle('active', centered);
+          if(centered) activeSignal = pan.dataset.signal;
+        });
+        // progress-bar color follows the active signal (green -> red)
+        const isRed = activeSignal === 'red';
+        prog.classList.toggle('red', isRed);
+        // scroll progress bar
+        const sc = window.scrollY / (document.body.scrollHeight - vh);
+        prog.style.width = (sc*100).toFixed(1) + '%';
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    onScroll();
   </script>
 </body>
 </html>
