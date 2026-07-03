@@ -1,6 +1,7 @@
 # OSIRIS.EXE — DIGITAL PRODUCT LINE v1.1
 
 **Source aesthetic:** STYLE_BIBLE_v1.6 (FULLY LOCKED)
+**Execution plan:** LAUNCH_PLAYBOOK.md (day-by-day steps, SEO kit, verifier gates)
 **Goal:** 10 sellable digital products → **20+ live listings** within one month
 **Platforms:** Etsy (discovery) + Gumroad (direct links / big bundles — direct sales cost 10% + $0.50 vs 30% for Gumroad Discover, so always drive your own traffic to direct links)
 **IP status:** 100% original IP (DSB Labs / Disk Darián) — no licensing risk, full commercial freedom
