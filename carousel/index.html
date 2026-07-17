@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020503">
+<title>OSIRIS.EXE // ARCHIVE CAROUSEL</title>
+<style>
+:root{--void:#020503;--signal:#7dffb0;--signal-hot:#d7ffe4;--border:rgba(125,255,176,.28);--card-w:min(58vw,22rem)}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;background:#000;color:var(--signal);overflow:hidden}
+body{font-family:"Courier New",monospace;background:radial-gradient(circle at 50% 40%,rgba(125,255,176,.07),transparent 26%),linear-gradient(rgba(2,5,3,.88),rgba(0,0,0,.98));-webkit-font-smoothing:none;touch-action:none}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:20;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 4px),radial-gradient(circle at center,transparent 35%,rgba(0,0,0,.72) 100%);mix-blend-mode:screen}
+.archive-shell{position:fixed;inset:0;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));display:grid;grid-template-rows:auto 1fr auto;z-index:2}
+.topbar,.bottombar{display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid var(--border);background:rgba(0,0,0,.48);padding:.65rem .8rem;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(.62rem,1.6vw,.82rem)}
+.topbar strong{color:var(--signal-hot)}.rec-dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:var(--signal);box-shadow:0 0 12px var(--signal);margin:0 .45rem;animation:pulse 1.2s steps(2,end) infinite}@keyframes pulse{50%{opacity:.2}}
+.stage{position:relative;display:grid;place-items:center;perspective:42em;overflow:hidden;mask:linear-gradient(90deg,transparent,#000 12% 88%,transparent)}
+.stage:before{content:"";position:absolute;inset:8%;border:1px solid rgba(125,255,176,.12);box-shadow:inset 0 0 80px rgba(125,255,176,.03);pointer-events:none}
+.a3d{display:grid;place-self:center;transform-style:preserve-3d;will-change:transform;transform:rotateX(-4deg) rotateY(var(--rotation,0deg));transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.card{--ba:calc(360deg/var(--n));grid-area:1/1;width:var(--card-w);aspect-ratio:7/10;object-fit:cover;border:1px solid rgba(125,255,176,.45);border-radius:.28rem;filter:sepia(.28) saturate(.78) contrast(1.08) brightness(.78);box-shadow:0 0 0 1px rgba(0,0,0,.9),0 1.5rem 4rem rgba(0,0,0,.7),0 0 1.5rem rgba(125,255,176,.08);backface-visibility:hidden;transform:rotateY(calc(var(--i)*var(--ba))) translateZ(calc((var(--card-w) + 2.2rem)/.72));transition:filter .35s;user-select:none;-webkit-user-drag:none}
+.card.active{filter:sepia(.08) saturate(.95) contrast(1.12) brightness(.95)}
+.reticle{position:absolute;left:50%;top:50%;width:min(72vw,29rem);aspect-ratio:7/10;translate:-50% -50%;border:1px solid rgba(125,255,176,.18);pointer-events:none}
+.status{position:absolute;left:1rem;bottom:1rem;max-width:min(36ch,72vw);border-left:2px solid var(--signal);padding:.6rem .75rem;background:rgba(0,0,0,.62);font-size:clamp(.64rem,1.7vw,.84rem);line-height:1.45;text-transform:uppercase;letter-spacing:.08em}
+.status b{color:var(--signal-hot)}.controls{display:flex;gap:.5rem}button{appearance:none;border:1px solid var(--border);background:#020503;color:var(--signal);font:inherit;padding:.38rem .65rem;text-transform:uppercase;letter-spacing:.08em}button:active{background:var(--signal);color:#000}
+.progress{height:2px;flex:1;background:rgba(125,255,176,.12);overflow:hidden;min-width:90px}.progress span{display:block;height:100%;width:100%;background:var(--signal);box-shadow:0 0 10px var(--signal);transition:transform .35s;transform-origin:left}
+.boot{position:fixed;inset:0;z-index:50;background:#000;display:grid;place-items:center;animation:bootAway .8s 1.5s forwards}.boot div{font-size:clamp(.75rem,3vw,1.1rem);letter-spacing:.18em;text-transform:uppercase;animation:glitch .18s steps(2,end) infinite}@keyframes bootAway{to{opacity:0;visibility:hidden}}@keyframes glitch{50%{transform:translateX(2px);text-shadow:-2px 0 #fff}}
+@media(max-width:700px){:root{--card-w:min(69vw,19rem)}.topbar span:nth-child(3){display:none}}
+</style>
+</head>
+<body>
+<div class="boot"><div>OSIRIS.EXE // MOUNTING ARCHIVE...</div></div>
+<main class="archive-shell">
+<header class="topbar"><span>REC<span class="rec-dot"></span><strong id="clock">02:47:13 AM</strong></span><span>OSIRIS.EXE // ARCHIVE CAROUSEL</span><span>CLEARANCE: DISK // EYES ONLY</span></header>
+<section class="stage" id="stage"><div class="a3d" id="ring"></div><div class="reticle"></div><div class="status"><b id="fileLabel">RECOVERED FRAGMENT 001</b><br>DRAG TO ROTATE // TAP A CARD TO ADVANCE<br>SIGNAL STATUS: <span id="signal">CONTAINED</span></div></section>
+<footer class="bottombar"><span>THE MEMORY IS NOT DEAD. IT WAS ARCHIVED.</span><div class="progress"><span id="progress"></span></div><div class="controls"><button id="prev">◀</button><button id="toggle">PAUSE</button><button id="next">▶</button></div></footer>
+</main>
+<script>
+const IMAGES=['assets/archive-01.jpeg',
+'assets/archive-02.jpeg',
+'assets/archive-03.jpeg',
+'assets/archive-04.jpeg',
+'assets/archive-05.jpeg',
+'assets/archive-06.jpeg',
+'assets/archive-07.jpeg',
+'assets/archive-08.webp',
+'assets/archive-09.jpeg',
+'assets/archive-10.jpeg'];
+const ring=document.querySelector('#ring'),stage=document.querySelector('#stage'),progress=document.querySelector('#progress'),label=document.querySelector('#fileLabel'),signal=document.querySelector('#signal'),toggle=document.querySelector('#toggle');
+ring.style.setProperty('--n',IMAGES.length);
+IMAGES.forEach((src,i)=>{const img=document.createElement('img');img.className='card';img.src=src;img.alt=`OSIRIS.EXE archive image ${String(i+1).padStart(3,'0')}`;img.style.setProperty('--i',i);img.addEventListener('click',()=>goTo(i));ring.appendChild(img)});
+let index=0,rotation=0,autoplay=true,timer=null;const step=360/IMAGES.length,cards=[...document.querySelectorAll('.card')];
+function render(){rotation=-index*step;ring.style.setProperty('--rotation',rotation+'deg');cards.forEach((c,i)=>c.classList.toggle('active',i===index));progress.style.transform=`scaleX(${(index+1)/IMAGES.length})`;label.textContent=`RECOVERED FRAGMENT ${String(index+1).padStart(3,'0')}`;signal.textContent=index%3===2?'RECONSTRUCTING':'CONTAINED'}
+function goTo(i){index=(i+IMAGES.length)%IMAGES.length;render();restart()}function next(){goTo(index+1)}function prev(){goTo(index-1)}function restart(){clearInterval(timer);if(autoplay)timer=setInterval(next,4200)}
+document.querySelector('#next').onclick=next;document.querySelector('#prev').onclick=prev;toggle.onclick=()=>{autoplay=!autoplay;toggle.textContent=autoplay?'PAUSE':'PLAY';restart()};
+let dragging=false,startX=0,startRot=0,moved=0;stage.addEventListener('pointerdown',e=>{dragging=true;startX=e.clientX;startRot=rotation;moved=0;stage.setPointerCapture(e.pointerId);clearInterval(timer)});stage.addEventListener('pointermove',e=>{if(!dragging)return;moved=e.clientX-startX;ring.style.setProperty('--rotation',(startRot+moved*.22)+'deg')});stage.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;if(Math.abs(moved)>35)index=(index+(moved<0?1:-1)+IMAGES.length)%IMAGES.length;render();restart()});
+setInterval(()=>document.querySelector('#clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);render();restart();
+</script>
+</body></html>

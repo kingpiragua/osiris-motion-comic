@@ -19,6 +19,7 @@ osiris-motion-comic/
 ├── index.html        # the player (no build step, no dependencies)
 ├── config.js         # page order, captions, signal color per page — EDIT THIS
 ├── README.md
+├── carousel/         # ARCHIVE CAROUSEL — 3D rotating card viewer (index.html + assets/)
 └── pages/            # both .webp (default, ~1.8MB total) and .png (full-res)
     ├── 00_cover
     ├── 01_cold_open
@@ -40,6 +41,12 @@ osiris-motion-comic/
 ## Reading order (signal rhythm)
 Cover → 1 cold open (⚫+green) → 2 room (⚫) → 3 static (🟢) →
 4 dead devices (⚫→🔴) → 5 reception / the turn (🟢→🔴) → 6 seen (🔴) → TO BE CONTINUED
+
+## Archive Carousel
+`carousel/index.html` is a standalone 3D rotating carousel of 10 recovered
+archive fragments (same no-build, no-dependency setup — open it directly or
+serve the folder and visit `/carousel/`). Drag to rotate, tap a card to
+advance, autoplay with pause/prev/next controls.
 
 Companion docs: `STYLE_BIBLE_v1.6.md`, `ISSUE_01_BREAKDOWN.md`.
 
