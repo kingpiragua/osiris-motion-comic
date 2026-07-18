@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#020503">
 <title>OSIRIS.EXE // ARCHIVE CAROUSEL</title>
 <style>
-:root{--void:#020503;--signal:#7dffb0;--signal-hot:#d7ffe4;--border:rgba(125,255,176,.28);--card-w:min(58vw,22rem)}
+:root{--void:#020503;--signal:#7dffb0;--signal-hot:#d7ffe4;--border:rgba(125,255,176,.28);--card-w:min(58vw,22rem);--ring-r:calc((var(--card-w) + 2.2rem)/.72)}
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;background:#000;color:var(--signal);overflow:hidden}
 body{font-family:"Courier New",monospace;background:radial-gradient(circle at 50% 40%,rgba(125,255,176,.07),transparent 26%),linear-gradient(rgba(2,5,3,.88),rgba(0,0,0,.98));-webkit-font-smoothing:none;touch-action:none}
@@ -16,10 +16,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:20;bac
 .topbar strong{color:var(--signal-hot)}.rec-dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:var(--signal);box-shadow:0 0 12px var(--signal);margin:0 .45rem;animation:pulse 1.2s steps(2,end) infinite}@keyframes pulse{50%{opacity:.2}}
 .stage{position:relative;display:grid;place-items:center;perspective:42em;overflow:hidden;mask:linear-gradient(90deg,transparent,#000 12% 88%,transparent)}
 .stage:before{content:"";position:absolute;inset:8%;border:1px solid rgba(125,255,176,.12);box-shadow:inset 0 0 80px rgba(125,255,176,.03);pointer-events:none}
-.a3d{display:grid;place-self:center;transform-style:preserve-3d;will-change:transform;transform:rotateX(-4deg) rotateY(var(--rotation,0deg));transition:transform .5s cubic-bezier(.22,1,.36,1)}
-.card{--ba:calc(360deg/var(--n));grid-area:1/1;width:var(--card-w);aspect-ratio:7/10;object-fit:cover;border:1px solid rgba(125,255,176,.45);border-radius:.28rem;filter:sepia(.28) saturate(.78) contrast(1.08) brightness(.78);box-shadow:0 0 0 1px rgba(0,0,0,.9),0 1.5rem 4rem rgba(0,0,0,.7),0 0 1.5rem rgba(125,255,176,.08);backface-visibility:hidden;transform:rotateY(calc(var(--i)*var(--ba))) translateZ(calc((var(--card-w) + 2.2rem)/.72));transition:filter .35s;user-select:none;-webkit-user-drag:none}
+.a3d{display:grid;place-self:center;transform-style:preserve-3d;will-change:transform;transform:translateZ(calc(-1*var(--ring-r))) rotateX(-4deg) rotateY(var(--rotation,0deg));transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.card{--ba:calc(360deg/var(--n));grid-area:1/1;width:auto;height:auto;max-width:var(--card-w);max-height:min(56vh,30rem);border:1px solid rgba(125,255,176,.45);border-radius:.28rem;filter:sepia(.28) saturate(.78) contrast(1.08) brightness(.78);box-shadow:0 0 0 1px rgba(0,0,0,.9),0 1.5rem 4rem rgba(0,0,0,.7),0 0 1.5rem rgba(125,255,176,.08);backface-visibility:hidden;transform:rotateY(calc(var(--i)*var(--ba))) translateZ(var(--ring-r));transition:filter .35s;user-select:none;-webkit-user-drag:none}
 .card.active{filter:sepia(.08) saturate(.95) contrast(1.12) brightness(.95)}
-.reticle{position:absolute;left:50%;top:50%;width:min(72vw,29rem);aspect-ratio:7/10;translate:-50% -50%;border:1px solid rgba(125,255,176,.18);pointer-events:none}
+.reticle{position:absolute;left:50%;top:50%;width:min(72vw,27rem);aspect-ratio:1/1;translate:-50% -50%;border:1px solid rgba(125,255,176,.18);pointer-events:none}
 .status{position:absolute;left:1rem;bottom:1rem;max-width:min(36ch,72vw);border-left:2px solid var(--signal);padding:.6rem .75rem;background:rgba(0,0,0,.62);font-size:clamp(.64rem,1.7vw,.84rem);line-height:1.45;text-transform:uppercase;letter-spacing:.08em}
 .status b{color:var(--signal-hot)}.controls{display:flex;gap:.5rem}button{appearance:none;border:1px solid var(--border);background:#020503;color:var(--signal);font:inherit;padding:.38rem .65rem;text-transform:uppercase;letter-spacing:.08em}button:active{background:var(--signal);color:#000}
 .progress{height:2px;flex:1;background:rgba(125,255,176,.12);overflow:hidden;min-width:90px}.progress span{display:block;height:100%;width:100%;background:var(--signal);box-shadow:0 0 10px var(--signal);transition:transform .35s;transform-origin:left}
